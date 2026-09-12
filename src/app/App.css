@@ -1,0 +1,1935 @@
+/* app/App.css — all component styles */
+
+/* === Page layout === */
+.page {
+  padding: 20px clamp(16px, 4vw, 32px);
+  max-width: 100%;
+  overflow: hidden;
+}
+
+/* === Header === */
+.header {
+  display: flex;
+  align-items: center;
+  padding: 0 20px;
+  background-color: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-sm);
+  overflow-x: auto;
+  white-space: nowrap;
+  -webkit-overflow-scrolling: touch;
+  min-height: 52px;
+  position: sticky;
+  top: 0;
+  z-index: 100;
+}
+.header__logo {
+  font-weight: 800;
+  font-size: 1.1rem;
+  margin-right: 16px;
+  padding: 12px 0;
+  color: var(--color-primary);
+  flex-shrink: 0;
+  letter-spacing: -0.02em;
+}
+.header__nav-btn {
+  padding: 8px 14px;
+  border: none;
+  background-color: transparent;
+  outline: none;
+  box-shadow: none;
+  font-size: 0.875rem;
+  flex-shrink: 0;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  font-weight: 500;
+  min-height: auto;
+  transition: all 0.15s ease;
+}
+.header__nav-btn:hover {
+  background-color: var(--color-primary-bg);
+  border-color: transparent;
+  color: var(--color-primary);
+}
+.header__nav-btn--active {
+  color: var(--color-primary);
+  font-weight: 600;
+  background-color: var(--color-primary-bg);
+}
+.header__nav-btn--disabled {
+  opacity: 0.35;
+  cursor: default;
+}
+.header__burger {
+  display: none;
+  margin-left: auto;
+  width: 44px;
+  height: 44px;
+  padding: 0;
+  border: none;
+  background: transparent;
+  color: var(--color-text);
+  align-items: center;
+  justify-content: center;
+  cursor: pointer;
+  border-radius: var(--radius-sm);
+  flex-shrink: 0;
+  position: relative;
+  z-index: 200;
+}
+.header__burger:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+/* Desktop exit from a menu screen (Settings, Contacts). The burger sits before
+   the nav in the DOM so the mobile drawer can hang off it; ordering it last
+   puts the ✕ at the far end of the bar, where an exit belongs, instead of
+   between the logo and the tabs. */
+.header__burger--close {
+  display: flex;
+  order: 1;
+}
+.header__burger-icon {
+  display: block;
+  font-size: 24px;
+  line-height: 1;
+  color: var(--color-text);
+  font-weight: 700;
+}
+.header__overlay {
+  display: none;
+}
+html.mobile .header__overlay {
+  display: block;
+  position: fixed;
+  top: 48px;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background: rgba(15, 23, 42, 0.4);
+  z-index: 98;
+}
+.header__nav {
+  display: flex;
+  align-items: center;
+  gap: 0;
+  flex-shrink: 0;
+}
+
+/* === Nav submenus (Settings, About) === */
+.header__dropdown-wrap {
+  position: relative;
+  flex-shrink: 0;
+}
+.header__nav-btn--expandable {
+  display: inline-flex;
+  align-items: center;
+  gap: 4px;
+}
+/* Desktop: a dropdown pinned to the tab that opened it. It is fixed rather than
+   absolute because .header scrolls horizontally and would clip it; the
+   coordinates are measured in Header.tsx. The mobile rules below turn it back
+   into an inline, indented block inside the drawer. */
+.header__dropdown {
+  position: fixed;
+  top: var(--dropdown-top, 100%);
+  left: var(--dropdown-left, 0);
+  min-width: 160px;
+  display: flex;
+  flex-direction: column;
+  padding: 4px;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-md);
+  z-index: 150;
+}
+/* Typography follows .header__nav-btn rather than the global uppercase
+   button style — these read as nav items, not as actions. */
+.header__dropdown-item {
+  padding: 8px 12px;
+  border: none;
+  background: transparent;
+  box-shadow: none;
+  text-align: left;
+  white-space: nowrap;
+  font-family: var(--font-headline);
+  font-size: 0.875rem;
+  font-weight: 500;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-secondary);
+  border-radius: var(--radius-sm);
+  min-height: auto;
+}
+.header__dropdown-item:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.header__dropdown-item--active {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+  font-weight: 600;
+}
+/* Divided off from the items above so it does not read as one of them. */
+.header__about-version {
+  margin: 4px 0 0;
+  padding: 8px 12px 4px;
+  border-top: 1px solid var(--color-border);
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+  white-space: nowrap;
+}
+/* Sits under both the header and the mobile drawer overlay, so it only
+   catches clicks that land on the page itself. */
+.header__dropdown-backdrop {
+  position: fixed;
+  inset: 0;
+  z-index: 97;
+}
+
+/* === AudioLibrary === */
+.audio-list {
+  list-style: none;
+  padding: 0;
+  margin: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+.audio-list__item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: 12px 16px;
+  cursor: pointer;
+  background-color: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: all 0.15s ease;
+  box-shadow: var(--shadow-sm);
+}
+.audio-list__item:hover {
+  border-color: var(--color-primary-light);
+  box-shadow: var(--shadow-md);
+}
+.audio-list__item--selected {
+  background-color: var(--color-primary-bg);
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 1px var(--color-primary), var(--shadow-sm);
+}
+.audio-list__item span {
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+  min-width: 0;
+  font-weight: 500;
+}
+.btn-delete {
+  margin-left: 12px;
+  background-color: var(--color-danger);
+  color: white;
+  border: none;
+  padding: 8px 16px;
+  border-radius: var(--radius-pill);
+  cursor: pointer;
+  flex-shrink: 0;
+  font-size: 0.85rem;
+  font-weight: 600;
+}
+.btn-delete:hover {
+  background-color: var(--color-danger-hover);
+  border-color: transparent;
+  color: white;
+}
+
+/* === AudioPlayer === */
+.eq-loader {
+  display: flex;
+  align-items: flex-end;
+  gap: 3px;
+  height: 24px;
+  padding: 8px 0;
+}
+.eq-loader__bar {
+  width: 4px;
+  background-color: var(--color-primary);
+  border-radius: 2px;
+}
+.eq-loader__text {
+  margin-left: 8px;
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+}
+@keyframes eqBounce {
+  0% { height: 4px; }
+  100% { height: 22px; }
+}
+
+.progress-wrap { margin-bottom: 8px; }
+.progress-bar { position: relative; height: 20px; user-select: none; }
+.progress-track {
+  position: absolute; top: 8px; left: 0; right: 0;
+  height: 4px; background-color: var(--color-border); border-radius: var(--radius-pill);
+}
+.progress-fill { height: 100%; background-color: var(--color-primary); border-radius: var(--radius-pill); }
+.progress-handle {
+  position: absolute; top: 3px; width: 14px; height: 14px;
+  border-radius: 50%; background-color: var(--color-primary);
+  border: 2px solid var(--color-bg); box-shadow: 0 1px 4px rgba(0, 0, 0, 0.2);
+  pointer-events: none;
+}
+.progress-time { display: flex; justify-content: space-between; font-size: 0.75rem; color: var(--color-text-muted); }
+/* Play and Stop are a pair, and Fragments sits directly under them: it spans
+   both plus the gap between, so the three read as one block rather than three
+   loose widths. All of it comes off two variables, which is also what keeps
+   Play from resizing under the cursor when its label turns into Pause.
+   The width is set for the longest label in any translation — Russian's
+   "Играть" — so that is the number to revisit if a longer one arrives. */
+.player-controls,
+.player-nav {
+  --player-btn-w: 110px;
+  --player-btn-gap: 8px;
+}
+.player-controls { display: flex; align-items: center; gap: var(--player-btn-gap); flex-wrap: wrap; }
+.player-controls > button { width: var(--player-btn-w); }
+.player-nav { margin-top: 16px; }
+.player-nav > button { width: calc(var(--player-btn-w) * 2 + var(--player-btn-gap)); }
+
+/* === VolumeControl === */
+.volume-control { display: flex; align-items: center; gap: 8px; }
+.volume-control__icon { flex-shrink: 0; color: var(--color-text-secondary); }
+.volume-control__slider { width: 120px; }
+
+/* === Waveform === */
+.waveform-container { position: relative; }
+.waveform-zoom { display: flex; align-items: center; gap: 8px; margin-bottom: 6px; }
+.waveform-zoom__label { font-weight: 500; font-size: 0.85rem; }
+.waveform-zoom__btn { width: 28px; height: 28px; font-size: 1rem; line-height: 1; padding: 0; }
+.waveform-zoom__value { font-size: 0.8rem; color: var(--color-text-muted); min-width: 36px; text-align: center; }
+.waveform-zoom__hint { font-size: 0.75rem; color: var(--color-text-muted); margin-left: 4px; }
+.waveform-canvas { width: 100%; border: 1px solid var(--color-border); display: block; border-radius: var(--radius-sm); }
+.waveform-scrollbar { width: 100%; margin-top: 4px; }
+
+/* === Spinners === */
+.spinner { border: 3px solid var(--color-border); border-radius: 50%; animation: spin 0.8s linear infinite; }
+.spinner--wf { width: 24px; height: 24px; border-top-color: var(--color-primary); }
+.spinner--vad { width: 20px; height: 20px; }
+.spinner--vad-detect { border-top-color: var(--color-success); }
+.spinner--vad-trim { border-top-color: var(--color-warning); }
+@keyframes spin { to { transform: rotate(360deg); } }
+
+/* === Fragment Editor === */
+/* Audio file name, then the sequence being edited, tucked under the heading. */
+.editor-source {
+  margin-top: -8px;
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--color-text-muted);
+}
+.editor-source p { margin: 0; }
+.editor-source p + p { margin-top: 2px; }
+/* Sequence plays a trimmed / volume-raised copy rather than the file itself. */
+.editor-source__processed { font-size: 0.8rem; font-style: italic; opacity: 0.85; }
+/* Sequences that could not ride along in the bundle. */
+.export-bundle__note { font-size: 0.8rem; color: var(--color-text-muted); flex-basis: 100%; }
+.frag-editor__loading { display: flex; align-items: center; gap: 8px; padding: 20px 0; color: var(--color-text-muted); }
+.file-player { display: flex; align-items: center; gap: 6px; margin-top: 8px; margin-bottom: 4px; flex-wrap: wrap; }
+.file-player__time { font-size: 0.8rem; color: var(--color-text-muted); }
+.action-bar { margin-top: 12px; margin-bottom: 12px; display: flex; align-items: center; gap: 12px; flex-wrap: wrap; }
+.action-bar__btn { padding: 10px 22px; }
+.action-bar__btn--danger { color: var(--color-danger); }
+.vad-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--color-text-muted); }
+
+.subtitle-prompt {
+  padding: 12px 16px;
+  background-color: var(--color-primary-bg);
+  border: 1px solid var(--color-primary-light);
+  border-radius: var(--radius-sm);
+  margin-bottom: 12px;
+  font-size: 0.9rem;
+  color: var(--color-primary-dark);
+}
+.fragment-list { margin-top: 20px; position: relative; }
+.fragment-panel { position: relative; }
+.fragment-row {
+  padding: 8px 12px; display: flex; align-items: center; gap: 6px;
+  flex-wrap: wrap; justify-content: space-between;
+  border: 1px solid var(--color-border); cursor: pointer;
+  border-radius: var(--radius-sm);
+  transition: all 0.15s ease;
+}
+.fragment-row:hover {
+  border-color: var(--color-primary-light);
+}
+.fragment-row--editing {
+  border-color: var(--color-primary);
+  background-color: var(--color-primary-bg);
+  cursor: default;
+  box-shadow: 0 0 0 1px var(--color-primary);
+}
+.fragment-row__time { font-size: 0.85rem; flex-shrink: 0; }
+.fragment-row__actions { display: flex; gap: 4px; align-items: center; flex-wrap: wrap; }
+
+.btn-save {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.btn-save:hover { background-color: var(--color-primary-dark); border-color: transparent; color: white; }
+.btn-sub { padding: 4px 8px; font-size: 0.8rem; }
+/* Sub/Vocab button of a fragment that already has one bound. The accent colour
+   carries the whole signal, so a glance down the list tells the user which
+   fragments are done without opening any of them. */
+.btn-sub--bound { color: var(--color-primary); }
+.subtitle-display {
+  border-left: 1px solid var(--color-border);
+  border-right: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+  padding: 6px 10px;
+  margin-bottom: 6px;
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+.subtitle-display__row { display: flex; gap: 6px; align-items: flex-start; margin-bottom: 2px; }
+.subtitle-display__name { color: var(--color-text-muted); flex-shrink: 0; }
+.subtitle-display__text { white-space: pre-wrap; flex: 1; min-width: 0; }
+.btn-remove-sub { font-size: 0.7rem; padding: 1px 4px; color: var(--color-danger); cursor: pointer; flex-shrink: 0; }
+
+/* === Settings page ===
+   Topic-grouped cards: an eyebrow heading over a hairline-bordered card whose
+   rows are separated by internal dividers. Label + hint on the left, control
+   flush right; slider rows drop their control onto its own full-width line. */
+.settings-page {
+  max-width: 680px;
+}
+.settings-page__title {
+  margin-bottom: 20px;
+}
+.settings-group {
+  margin-bottom: 28px;
+}
+.settings-group__title {
+  margin: 0 0 8px;
+  padding-left: 2px;
+  color: var(--color-text-muted);
+  font-size: 0.7rem;
+  letter-spacing: 0.12em;
+}
+.settings-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.settings-row {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 16px 24px;
+  padding: 14px 18px;
+  flex-wrap: wrap;
+}
+.settings-row + .settings-row {
+  border-top: 1px solid var(--color-border);
+}
+.settings-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+  flex: 1 1 200px;
+}
+.settings-row__label {
+  font-weight: 600;
+  font-size: 0.92rem;
+  color: var(--color-text);
+}
+.settings-row__hint {
+  font-size: 0.78rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+.settings-row__control {
+  flex: 0 0 auto;
+  min-width: 0;
+}
+/* Sliders read better across the full card width than squeezed beside a label. */
+.settings-row--stacked .settings-row__text {
+  flex: 1 1 100%;
+}
+.settings-row--stacked .settings-row__control {
+  flex: 1 1 100%;
+}
+.settings-slider-row {
+  display: flex;
+  align-items: center;
+  gap: 12px;
+}
+
+/* --- Select --- */
+.settings-select {
+  appearance: none;
+  -webkit-appearance: none;
+  background-color: var(--color-bg);
+  background-image: url("data:image/svg+xml;charset=utf-8,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 24 24' fill='none' stroke='%23737688' stroke-width='2' stroke-linecap='round' stroke-linejoin='round'%3E%3Cpath d='M6 9l6 6 6-6'/%3E%3C/svg%3E");
+  background-repeat: no-repeat;
+  background-position: right 10px center;
+  background-size: 16px 16px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  color: var(--color-text);
+  font-family: inherit;
+  font-size: 0.88rem;
+  font-weight: 500;
+  padding: 8px 34px 8px 12px;
+  min-width: 170px;
+  max-width: 100%;
+  cursor: pointer;
+  transition: border-color 0.15s ease, box-shadow 0.15s ease;
+}
+.settings-select:hover {
+  border-color: var(--color-primary-light);
+}
+.settings-select:focus-visible {
+  outline: none;
+  border-color: var(--color-primary);
+  box-shadow: 0 0 0 3px var(--color-primary-bg);
+}
+
+/* --- Segmented control --- */
+.settings-seg {
+  display: inline-flex;
+  align-items: center;
+  gap: 2px;
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  padding: 3px;
+}
+.settings-seg__btn {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  border: 1px solid transparent;
+  background: transparent;
+  color: var(--color-text-secondary);
+  padding: 6px 14px;
+  border-radius: calc(var(--radius-btn) - 3px);
+  font-size: 0.75rem;
+  font-weight: 600;
+  letter-spacing: 0.04em;
+  cursor: pointer;
+  min-height: auto;
+}
+.settings-seg__btn:hover {
+  background: var(--color-bg);
+  border-color: transparent;
+  color: var(--color-primary);
+}
+.settings-seg__icon {
+  font-size: 0.9rem;
+  line-height: 1;
+}
+.settings-seg__btn--active,
+.settings-seg__btn--active:hover {
+  background: var(--color-primary);
+  border-color: transparent;
+  color: #fff;
+  box-shadow: var(--shadow-sm);
+}
+
+/* --- Colour theme swatches --- */
+.settings-swatches {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.settings-swatch {
+  display: inline-flex;
+  align-items: center;
+  gap: 8px;
+  padding: 7px 14px 7px 10px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  font-size: 0.8rem;
+  font-weight: 600;
+  cursor: pointer;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+.settings-swatch:hover {
+  border-color: var(--color-primary-light);
+  color: var(--color-text);
+}
+/* The radio itself stays in the accessibility tree but out of the layout —
+   the chip is the visible control. */
+.settings-swatch input {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  opacity: 0;
+  pointer-events: none;
+}
+.settings-swatch--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.settings-swatch:focus-within {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+/* 50%, not --radius-pill: the Studio Dark reskin redefines that token as 4px,
+   which would turn these into rounded squares. */
+.settings-swatch__dot {
+  width: 14px;
+  height: 14px;
+  border-radius: 50%;
+  flex-shrink: 0;
+  box-shadow: inset 0 0 0 1px rgba(0, 0, 0, 0.12);
+}
+/* Fixed palette previews — these must show what each theme looks like, so they
+   deliberately do not follow the currently active theme variables. */
+.settings-swatch__dot--normal { background: linear-gradient(135deg, #0052ff, #003ec7); }
+.settings-swatch__dot--pastel { background: linear-gradient(135deg, #7c9eb2, #d9a37a); }
+.settings-swatch__dot--neon { background: linear-gradient(135deg, #00e5ff, #ff6b35); }
+
+/* Tint swatches show the ground the option actually produces. The theme dot is
+   the untinted page colour; the picker dot is the live ground, so it is the
+   colour the user chose mixed exactly as the page mixes it. Until something is
+   chosen that dot has nothing to show, and wears a colour wheel instead. */
+.settings-swatch__dot--tint-default { background: var(--color-bg-page); }
+.settings-swatch__dot--tint-custom { background: var(--bg-ground-color); }
+.settings-swatch__dot--tint-pick {
+  background: conic-gradient(#c0605f, #b08843, #4f8a63, #3d7fd6, #8271cf, #c0605f);
+}
+
+
+/* --- Slider --- */
+.settings-slider {
+  appearance: none;
+  -webkit-appearance: none;
+  flex: 1 1 0;
+  min-width: 0;
+  height: 20px;
+  background: transparent;
+  cursor: pointer;
+}
+.settings-slider::-webkit-slider-runnable-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+.settings-slider::-moz-range-track {
+  height: 4px;
+  border-radius: 2px;
+  background: var(--color-border);
+}
+.settings-slider::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  width: 16px;
+  height: 16px;
+  margin-top: -6px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-bg);
+  box-shadow: var(--shadow-md);
+}
+.settings-slider::-moz-range-thumb {
+  width: 16px;
+  height: 16px;
+  border-radius: 50%;
+  background: var(--color-primary);
+  border: 2px solid var(--color-bg);
+  box-shadow: var(--shadow-md);
+}
+.settings-slider:focus-visible {
+  outline: none;
+}
+.settings-slider:focus-visible::-webkit-slider-thumb {
+  box-shadow: 0 0 0 4px var(--color-primary-bg);
+}
+.settings-slider:focus-visible::-moz-range-thumb {
+  box-shadow: 0 0 0 4px var(--color-primary-bg);
+}
+.settings-value {
+  flex: 0 0 auto;
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text-secondary);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  padding: 4px 8px;
+  min-width: 60px;
+  text-align: center;
+  white-space: nowrap;
+}
+
+/* --- Reset-to-default --- */
+.settings-reset {
+  flex: 0 0 auto;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  width: 30px;
+  height: 30px;
+  padding: 0;
+  min-height: auto;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-icon);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+  cursor: pointer;
+}
+.settings-reset svg {
+  flex: 0 0 auto;
+}
+.settings-reset:hover:not(:disabled) {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.settings-reset:disabled {
+  opacity: 0.5;
+  cursor: default;
+  border-color: var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-muted);
+}
+
+/* --- Subtitle preview --- */
+.settings-row--preview {
+  background: var(--color-bg-subtle);
+}
+.settings-preview {
+  flex: 1 1 100%;
+  min-width: 0;
+}
+.settings-preview__label {
+  font-size: 0.72rem;
+  text-transform: uppercase;
+  letter-spacing: 0.1em;
+  color: var(--color-text-muted);
+  margin-bottom: 8px;
+}
+.settings-preview__file {
+  font-size: 11px;
+  color: var(--color-text-muted);
+}
+/* Height is fixed so raising the preview font size grows the text inside a
+   stable box instead of pushing the rest of the page down. */
+.settings-page .sp-subtitle-display {
+  height: 160px;
+  min-height: 160px;
+  max-height: 160px;
+  overflow-y: auto;
+  word-break: break-word;
+  overflow-wrap: break-word;
+  background: var(--color-bg);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  padding: 12px 14px;
+}
+.settings-preview__text {
+  font-size: var(--sub-font-size, 14px);
+  white-space: pre-wrap;
+  line-height: 1.5;
+  color: var(--color-text);
+}
+
+/* === Modals === */
+.modal-overlay {
+  position: fixed; top: 0; left: 0; right: 0; bottom: 0;
+  background: rgba(15, 23, 42, 0.5);
+  backdrop-filter: blur(4px);
+  display: flex; align-items: center; justify-content: center;
+  z-index: 1000;
+}
+.modal-box {
+  background: var(--color-bg);
+  padding: 2rem;
+  border-radius: var(--radius-lg);
+  min-width: min(360px, 90vw);
+  text-align: center;
+  box-shadow: var(--shadow-lg);
+}
+.modal-box--wide {
+  max-width: 600px;
+  max-height: 80vh;
+  display: flex;
+  flex-direction: column;
+  text-align: left;
+}
+.modal-box__title {
+  margin: 0 0 0.75rem;
+  font-size: 1.05rem;
+}
+.modal-actions { display: flex; gap: 12px; justify-content: center; margin-top: 20px; }
+/* Why an action was refused — the snippet edit that would have moved another
+   fragment's text. Sits between the hint and the text box. */
+.modal-warning {
+  margin: 0 0 12px;
+  padding: 10px 12px;
+  border: 1px solid var(--color-danger);
+  border-radius: var(--radius-sm);
+  background-color: var(--color-danger-bg);
+  color: var(--color-text);
+  font-size: 0.85rem;
+  line-height: 1.5;
+}
+.btn-primary {
+  background-color: var(--color-primary);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+  transition: all 0.15s ease;
+}
+.btn-primary:hover { background-color: var(--color-primary-dark); border-color: transparent; color: white; }
+.btn-danger {
+  background-color: var(--color-danger);
+  color: white;
+  border: none;
+  padding: 10px 22px;
+  border-radius: var(--radius-pill);
+  font-weight: 600;
+}
+.btn-danger:hover { background-color: var(--color-danger-hover); border-color: transparent; color: white; }
+.subtitle-content {
+  flex: 1; overflow: auto;
+  border: 1px solid var(--color-border);
+  padding: 12px;
+  font-size: 0.9rem;
+  line-height: 1.6;
+  white-space: pre-wrap;
+  user-select: text;
+  cursor: text;
+  border-radius: var(--radius-sm);
+}
+/* The same box, turned into a textarea for editing the subtitle / vocabulary
+   file's own text. */
+.subtitle-content--edit {
+  display: block;
+  width: 100%;
+  min-height: 200px;
+  resize: vertical;
+  font-family: inherit;
+  color: var(--color-text);
+  background: var(--color-bg);
+}
+.subtitle-content--edit:disabled { opacity: 0.6; }
+/* === Contacts page === */
+.contacts-page__body {
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+  max-width: 560px;
+}
+.contacts-card {
+  margin-top: 20px;
+  max-width: 420px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.contacts-row {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  padding: 14px 18px;
+  color: inherit;
+  text-decoration: none;
+  transition: background-color 0.15s ease;
+}
+.contacts-row + .contacts-row {
+  border-top: 1px solid var(--color-border);
+}
+.contacts-row:hover {
+  background-color: var(--color-bg-subtle);
+}
+.contacts-row__icon {
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  flex: 0 0 auto;
+  width: 36px;
+  height: 36px;
+  border-radius: 50%;
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.contacts-row__text {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+  min-width: 0;
+}
+.contacts-row__label {
+  font-size: 0.78rem;
+  color: var(--color-text-muted);
+}
+.contacts-row__value {
+  font-family: var(--font-mono);
+  font-size: 0.95rem;
+  font-weight: 600;
+  color: var(--color-primary);
+  user-select: text;
+  overflow-wrap: anywhere;
+}
+
+/* === Help page ===
+   Same card language as the Settings page: a numbered eyebrow over a
+   hairline-bordered card, one card per stage of the pipeline. */
+.help-page {
+  max-width: 680px;
+}
+.help-page__title {
+  margin-bottom: 12px;
+}
+.help-page__intro {
+  margin: 0 0 28px;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.help-section {
+  margin-bottom: 24px;
+}
+.help-section__eyebrow {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  margin: 0 0 8px;
+  padding-left: 2px;
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.12em;
+  color: var(--color-text-muted);
+}
+.help-section__num {
+  color: var(--color-primary);
+}
+.help-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  box-shadow: var(--shadow-sm);
+  padding: 16px 18px;
+}
+.help-card__title {
+  margin: 0 0 8px;
+  font-size: 0.95rem;
+  text-transform: none;
+  letter-spacing: -0.01em;
+  color: var(--color-text);
+}
+.help-card__body {
+  margin: 0;
+  color: var(--color-text-secondary);
+  font-size: 0.9rem;
+  line-height: 1.6;
+}
+.help-card__tips {
+  margin: 14px 0 0;
+  padding: 14px 0 0 20px;
+  border-top: 1px solid var(--color-border);
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  color: var(--color-text-secondary);
+  font-size: 0.85rem;
+  line-height: 1.55;
+}
+.help-card__tips li::marker {
+  color: var(--color-primary);
+}
+.help-page__version {
+  margin: 32px 0 0;
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  letter-spacing: 0.02em;
+  color: var(--color-text-muted);
+}
+
+/* Onboarding lives in its own stylesheet — see onboarding.css */
+
+/* === FragmentLibrary page === */
+.toolbar { display: flex; gap: 12px; margin-bottom: 16px; align-items: center; flex-wrap: wrap; }
+.file-info { font-size: 0.9rem; color: var(--color-text-muted); margin-top: -8px; }
+.empty-state { color: var(--color-text-muted); }
+.seq-card {
+  margin-bottom: 8px;
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  padding: 14px 16px;
+  box-shadow: var(--shadow-sm);
+  transition: all 0.15s ease;
+  text-align: left;
+}
+.seq-card:hover {
+  box-shadow: var(--shadow-md);
+  border-color: var(--color-border-strong);
+}
+.seq-bar-wrap { display: flex; align-items: center; gap: 8px; flex-wrap: wrap; justify-content: flex-start; }
+.seq-controls { display: flex; gap: 2px; align-items: center; flex-wrap: wrap; margin-left: auto; }
+.seq-controls__btn {
+  background: none;
+  border: none;
+  cursor: pointer;
+  padding: 6px;
+  border-radius: var(--radius-sm);
+  color: var(--color-text-secondary);
+  transition: all 0.15s ease;
+  min-height: auto;
+}
+.seq-controls__btn:hover {
+  background: var(--color-primary-bg);
+  border-color: transparent;
+  color: var(--color-primary);
+}
+.seq-label { flex: 1; min-width: 60px; font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text); }
+.seq-label-input {
+  flex: 1;
+  min-width: 60px;
+  box-sizing: border-box;
+  font-size: 0.9rem; font-weight: 600;
+  border: none;
+  padding: 4px 8px;
+  border-radius: 4px;
+  outline: none;
+}
+.seq-subtitle {
+  font-size: 0.8rem;
+  color: var(--color-text-secondary);
+  padding: 6px 10px;
+  border: 1px solid var(--color-border);
+  border-top: none;
+  white-space: pre-wrap;
+  word-break: break-word;
+  border-radius: 0 0 var(--radius-sm) var(--radius-sm);
+}
+
+
+/* ===========================================================
+   MOBILE OVERRIDES — using html.mobile class set by JS
+   =========================================================== */
+
+/* --- Header --- */
+html.mobile .header {
+  padding: 0 12px;
+  min-height: 48px;
+  overflow-x: visible;
+}
+html.mobile .header__logo {
+  font-size: 1.05rem;
+  margin-right: 10px;
+}
+html.mobile .header__burger {
+  display: flex !important;
+}
+html.mobile .header__nav {
+  display: none !important;
+  position: absolute;
+  top: 100%;
+  left: 0;
+  right: 0;
+  max-height: calc(100vh - 48px);
+  overflow-y: auto;
+  background: var(--color-bg);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: var(--shadow-md);
+  flex-direction: column;
+  padding: 8px 0;
+  z-index: 99;
+  -webkit-overflow-scrolling: touch;
+}
+html.mobile .header__nav--open {
+  display: flex !important;
+}
+html.mobile .header__nav-btn--expandable {
+  display: flex !important;
+  align-items: center;
+  justify-content: space-between;
+}
+html.mobile .header__nav-chevron {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin-left: 12px;
+}
+html.mobile .header__dropdown-wrap {
+  width: 100%;
+}
+/* In the drawer there is nothing to hang a dropdown off, so the submenu
+   becomes an indented block in the flow. */
+html.mobile .header__dropdown {
+  position: static;
+  min-width: 0;
+  padding: 0;
+  border: none;
+  border-radius: 0;
+  box-shadow: none;
+  background: var(--color-bg-subtle);
+}
+html.mobile .header__dropdown-item {
+  padding: 12px 20px 12px 36px;
+  font-size: 1rem;
+  min-height: 48px;
+  border-radius: 0;
+}
+html.mobile .header__about-version {
+  margin: 0;
+  padding: 10px 20px 12px 36px;
+  font-size: 0.75rem;
+}
+html.mobile .header__submenu {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  padding: 12px 20px 16px;
+  background: var(--color-bg-subtle);
+  border-top: 1px solid var(--color-border);
+  border-bottom: 1px solid var(--color-border);
+}
+html.mobile .header__submenu-row {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+html.mobile .header__submenu-label {
+  flex: 0 0 120px;
+  font-size: 0.9rem;
+  font-weight: 500;
+  color: var(--color-text-secondary);
+}
+html.mobile .header__submenu-control {
+  flex: 1;
+  min-width: 0;
+}
+html.mobile .header__submenu-control--inline {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+}
+html.mobile .header__submenu-control--inline input[type="range"] {
+  flex: 1;
+  min-width: 0;
+}
+html.mobile .header__submenu-value {
+  font-variant-numeric: tabular-nums;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+  min-width: 40px;
+  text-align: right;
+}
+html.mobile .header__submenu-preview {
+  margin-top: 4px;
+}
+html.mobile .header__submenu-preview-label {
+  font-size: 0.8rem;
+  color: var(--color-text-muted);
+  margin-bottom: 4px;
+}
+html.mobile .header__nav .header__nav-btn {
+  width: 100%;
+  text-align: left;
+  padding: 12px 20px;
+  font-size: 1rem;
+  min-height: 48px;
+  border-radius: 0;
+  justify-content: flex-start;
+}
+
+/* --- Page --- */
+html.mobile .page {
+  padding: 14px 12px;
+}
+
+/* --- Audio list items --- */
+html.mobile .audio-list__item {
+  min-height: 48px;
+  padding: 12px 14px;
+  font-size: 1rem;
+}
+html.mobile .btn-delete {
+  padding: 6px 12px;
+  font-size: 0.9rem;
+  min-height: 36px;
+}
+
+/* --- Volume control --- */
+html.mobile .volume-control__slider { width: 100px; }
+
+/* --- Fragment rows --- */
+html.mobile .fragment-row {
+  padding: 8px 10px;
+  gap: 6px;
+  min-height: 44px;
+}
+html.mobile .fragment-row__time {
+  font-size: 0.9rem;
+}
+html.mobile .fragment-row__actions {
+  gap: 6px;
+}
+
+/* --- Action bar --- */
+html.mobile .action-bar {
+  gap: 10px;
+}
+html.mobile .action-bar__btn {
+  padding: 8px 14px;
+  font-size: 0.95rem;
+  min-height: 44px;
+}
+
+/* --- Sequence controls --- */
+html.mobile .seq-controls__btn {
+  min-width: 40px;
+  min-height: 40px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  padding: 6px;
+}
+html.mobile .seq-label {
+  font-size: 0.95rem;
+}
+html.mobile .seq-label-input {
+  font-size: 0.95rem;
+  padding: 4px 8px;
+  min-height: 36px;
+}
+html.mobile .seq-subtitle {
+  font-size: 0.85rem;
+  padding: 6px 10px;
+}
+
+/* --- Buttons: save, sub, primary, danger --- */
+html.mobile .btn-save {
+  padding: 6px 14px;
+  font-size: 0.95rem;
+  min-height: 40px;
+}
+html.mobile .btn-sub {
+  padding: 6px 10px;
+  font-size: 0.9rem;
+  min-height: 36px;
+}
+html.mobile .btn-primary {
+  padding: 8px 18px;
+  font-size: 1rem;
+  min-height: 44px;
+}
+html.mobile .btn-danger {
+  padding: 8px 18px;
+  font-size: 1rem;
+  min-height: 44px;
+}
+
+/* --- Subtitle display --- */
+html.mobile .subtitle-display {
+  font-size: 0.9rem;
+  padding: 6px 10px;
+}
+html.mobile .btn-remove-sub {
+  font-size: 0.8rem;
+  padding: 4px 8px;
+  min-height: 32px;
+}
+
+/* --- Modals --- */
+html.mobile .modal-box {
+  padding: 20px 16px;
+  min-width: min(340px, 92vw);
+}
+html.mobile .modal-box--wide {
+  max-width: 95vw;
+  max-height: 85vh;
+}
+html.mobile .modal-actions {
+  gap: 10px;
+}
+
+/* --- Settings rows — every control drops onto its own full-width line so it
+       stays reachable with a thumb instead of being squeezed beside the label --- */
+/* `html.mobile h3` outweighs the class selector, so the eyebrow needs its own
+   mobile rule or it renders at heading size. */
+html.mobile .settings-group__title {
+  font-size: 0.72rem;
+}
+/* A segmented button standing on its own rather than inside a group: same
+   shape, but it has to carry its own border since there is no group to sit in. */
+.settings-seg__btn--standalone {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-btn);
+  background: var(--color-bg);
+  flex: 0 0 auto;
+}
+.settings-seg__btn--standalone:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+/* Shows a name rather than a number, so it drops the tabular figures and the
+   fixed width and takes the room it needs instead. */
+.settings-value--wide {
+  flex: 1 1 auto;
+  font-family: inherit;
+  min-width: 0;
+  overflow: hidden;
+  text-overflow: ellipsis;
+}
+
+
+/* === Backgrounds page =====================================================
+   One card per background. The card that is in use is the card that opens: the
+   page has no second "selected for editing" state, so what you are changing is
+   always what the page behind you is wearing.
+   ========================================================================= */
+
+.bg-back {
+  margin-bottom: 12px;
+  padding: 0;
+  border: none;
+  background: none;
+  color: var(--color-primary);
+  font-size: 0.85rem;
+  font-weight: 600;
+  cursor: pointer;
+}
+.bg-intro {
+  margin: 0 0 18px;
+}
+.bg-error {
+  margin: 0 0 16px;
+  padding: 10px 14px;
+  border: 1px solid var(--color-danger, #c0605f);
+  border-radius: var(--radius-btn);
+  color: var(--color-danger, #c0605f);
+  font-size: 0.82rem;
+}
+.bg-list {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  margin-bottom: 20px;
+}
+.bg-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  box-shadow: var(--shadow-sm);
+  overflow: hidden;
+}
+.bg-card--active {
+  border-color: var(--color-primary);
+}
+.bg-card__pick {
+  display: flex;
+  align-items: center;
+  gap: 14px;
+  width: 100%;
+  padding: 12px 16px;
+  border: none;
+  background: none;
+  color: inherit;
+  text-align: left;
+  cursor: pointer;
+}
+.bg-card__pick:hover {
+  background: var(--color-bg-subtle);
+}
+/* The preview is the page's own mask at a third scale, tinted with the text
+   colour the way the layer is — not a screenshot, the same tile. */
+.bg-card__preview {
+  flex: 0 0 auto;
+  width: 84px;
+  height: 56px;
+  border-radius: var(--radius-btn);
+  background-color: var(--color-text);
+  opacity: 0.5;
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}
+.bg-card__preview--empty {
+  background-color: var(--color-bg-subtle);
+  border: 1px dashed var(--color-border);
+  opacity: 1;
+}
+.bg-card__head {
+  display: flex;
+  flex-direction: column;
+  gap: 3px;
+  flex: 1 1 auto;
+  min-width: 0;
+}
+/* The card is a button, and the app's buttons are uppercase tracked labels —
+   but a background's own name and file count are content, so they step back out
+   of the button treatment. The USE / IN USE word stays in it. */
+.bg-card__name {
+  font-weight: 600;
+  font-size: 0.92rem;
+  letter-spacing: -0.01em;
+  text-transform: none;
+  color: var(--color-text);
+  overflow: hidden;
+  text-overflow: ellipsis;
+  white-space: nowrap;
+}
+.bg-card__meta {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  font-size: 0.78rem;
+  font-weight: 400;
+  letter-spacing: 0;
+  text-transform: none;
+  color: var(--color-text-muted);
+}
+.bg-card__tag {
+  padding: 1px 7px;
+  border-radius: var(--radius-pill);
+  background: var(--color-bg-subtle);
+  border: 1px solid var(--color-border);
+  font-size: 0.68rem;
+  letter-spacing: 0.06em;
+  text-transform: uppercase;
+}
+.bg-card__state {
+  flex: 0 0 auto;
+  font-size: 0.78rem;
+  font-weight: 600;
+  color: var(--color-text-muted);
+}
+.bg-card--active .bg-card__state {
+  color: var(--color-primary);
+}
+.bg-card__editor {
+  display: flex;
+  flex-direction: column;
+  gap: 16px;
+  padding: 16px;
+  border-top: 1px solid var(--color-border);
+  background: var(--color-bg-subtle);
+}
+.bg-field {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  min-width: 0;
+}
+.bg-field__label {
+  font-weight: 600;
+  font-size: 0.82rem;
+  color: var(--color-text);
+}
+.bg-field__hint {
+  font-size: 0.76rem;
+  line-height: 1.4;
+  color: var(--color-text-muted);
+}
+.bg-field__row {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 8px;
+}
+.bg-field__input {
+  width: 100%;
+  max-width: 320px;
+  background-image: none;
+}
+.bg-files {
+  display: flex;
+  flex-wrap: wrap;
+  gap: 6px;
+  margin: 0;
+  padding: 0;
+  list-style: none;
+}
+.bg-files__item {
+  padding: 3px 9px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-pill);
+  background: var(--color-bg);
+  font-family: var(--font-mono);
+  font-size: 0.72rem;
+  color: var(--color-text-secondary);
+}
+.bg-delete:hover:not(:disabled) {
+  border-color: var(--color-danger, #c0605f);
+  background: transparent;
+  color: var(--color-danger, #c0605f);
+}
+.bg-create {
+  display: flex;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 10px 14px;
+}
+.bg-create .settings-row__hint {
+  flex: 1 1 220px;
+}
+
+html.mobile .bg-card__pick {
+  flex-wrap: wrap;
+}
+html.mobile .bg-card__preview {
+  width: 64px;
+  height: 44px;
+}
+
+/* Mobile sets buttons at 1rem, so the same labels need a wider track. */
+html.mobile .player-controls,
+html.mobile .player-nav {
+  --player-btn-w: 118px;
+}
+
+html.mobile .settings-row {
+  gap: 12px;
+  padding: 14px;
+}
+html.mobile .settings-row__text,
+html.mobile .settings-row__control {
+  flex: 1 1 100%;
+}
+html.mobile .settings-select {
+  width: 100%;
+}
+html.mobile .settings-seg {
+  width: 100%;
+}
+html.mobile .settings-seg__btn {
+  flex: 1 1 0;
+  justify-content: center;
+  min-height: 42px;
+  padding: 6px 10px;
+}
+html.mobile .settings-swatch {
+  min-height: 42px;
+}
+html.mobile .settings-slider-row {
+  gap: 10px;
+}
+/* `html.mobile button` outweighs the class, and its 22px side padding would
+   crush the icon to zero width inside a fixed-size square. */
+html.mobile .settings-reset {
+  width: 42px;
+  height: 42px;
+  min-height: 42px;
+  padding: 0;
+}
+html.mobile .subtitle-content {
+  font-size: 1rem;
+  padding: 14px;
+  line-height: 1.7;
+}
+
+/* --- Toolbar --- */
+html.mobile .toolbar {
+  gap: 10px;
+}
+
+/* --- File player --- */
+html.mobile .file-player {
+  gap: 8px;
+}
+html.mobile .file-player__time {
+  font-size: 0.9rem;
+}
+
+/* --- Progress bar — larger touch target --- */
+html.mobile .progress-bar {
+  height: 28px;
+}
+html.mobile .progress-track {
+  top: 11px;
+  height: 6px;
+}
+html.mobile .progress-handle {
+  top: 5px;
+  width: 18px;
+  height: 18px;
+}
+html.mobile .progress-time {
+  font-size: 0.85rem;
+}
+
+/* --- Waveform zoom controls --- */
+html.mobile .waveform-zoom__btn {
+  width: 36px;
+  height: 36px;
+  font-size: 1.1rem;
+}
+html.mobile .waveform-zoom__label {
+  font-size: 0.9rem;
+}
+
+/* --- Misc text --- */
+html.mobile .file-info {
+  font-size: 0.95rem;
+}
+html.mobile .subtitle-prompt {
+  font-size: 0.95rem;
+  padding: 12px 14px;
+}
+html.mobile .vad-indicator {
+  font-size: 0.9rem;
+}
+
+/* ===========================================================
+   STUDIO DARK design language — applied to ALL themes.
+   Sharp corners, ghost buttons, mono labels, hairline borders.
+   Colors come from each theme's CSS variables, so palettes stay
+   intact — only the form changes.
+   =========================================================== */
+
+/* --- Header (Blend): transparent bar, humane headline logo, pill nav tabs.
+   Background is transparent per the direction; the existing backdrop blur is
+   kept so the sticky bar stays legible over scrolling content. --- */
+.header {
+  min-height: 58px;
+  background: transparent;
+  backdrop-filter: blur(10px);
+  border-bottom: 1px solid var(--color-border);
+  box-shadow: none;
+  padding: 0 24px;
+}
+.header__logo {
+  font-family: var(--font-headline);
+  font-size: 17px;
+  font-weight: 700;
+  letter-spacing: -0.01em;
+  text-transform: none;
+}
+.header__nav {
+  gap: 4px;
+}
+.header__nav-btn {
+  font-family: var(--font-headline);
+  font-size: 13px;
+  font-weight: 600;
+  text-transform: none;
+  letter-spacing: 0;
+  color: var(--color-text-muted);
+  padding: 7px 14px;
+  border-radius: var(--radius-nav);
+  background: transparent;
+  border-bottom: none;
+}
+.header__nav-btn:hover {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.header__nav-btn--active {
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+.header__burger {
+  border-radius: var(--radius-icon);
+}
+/* No background here: Blend's header is transparent, and a solid nav strip
+   would show through it as a block behind the tabs. The mobile drawer sets
+   its own opaque background (see the html.mobile rules above), since there
+   it drops over page content. */
+.header__submenu {
+  background: var(--color-bg-subtle);
+}
+
+/* The library page's two actions — Upload audio and Import bundle — stack one
+   above the other, so a difference of a few pixels between them reads as a
+   ragged edge. They are in separate components with no shared parent to size
+   them from, hence a width both can meet: wide enough for the longest label in
+   any translation (Russian's "+ Загрузить аудио" is the current high-water
+   mark at ~219px), with the label centred so the shorter one is not left
+   hanging. The Import button also swaps its label for "Importing…" mid-click,
+   which this keeps from resizing the button under the cursor. */
+.library-action {
+  min-width: 220px;
+  justify-content: center;
+  text-align: center;
+}
+/* A phone has no room to spare: full width keeps them equal and stops 220px
+   from dictating the layout. */
+html.mobile .library-action {
+  min-width: 0;
+  width: 100%;
+}
+
+/* --- Audio library list items — rounded, hairline, glowing accent when
+   selected (Blend applies the accent stripe to file rows too) --- */
+.audio-list__item {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  padding: 11px 14px;
+  box-shadow: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.audio-list__item:hover {
+  border-color: var(--color-primary);
+  box-shadow: none;
+  background: color-mix(in srgb, var(--color-primary) 5%, var(--color-bg-card));
+}
+.audio-list__item--selected {
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-card));
+  border-color: var(--color-primary);
+  border-left: 4px solid var(--color-primary);
+  box-shadow: var(--glow-primary);
+}
+.audio-list__item span {
+  font-family: var(--font-mono);
+  font-weight: 500;
+  font-size: 0.85rem;
+}
+
+.page {
+  padding: 24px clamp(16px, 4vw, 32px);
+}
+
+/* --- Filled action variants --- */
+.btn-primary,
+.btn-save {
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  color: var(--color-bg-page);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.75rem;
+  border-radius: var(--radius-btn);
+  padding: 8px 16px;
+  box-shadow: var(--glow-primary);
+}
+.btn-primary:hover,
+.btn-save:hover {
+  background: var(--color-primary-light);
+  border-color: var(--color-primary-light);
+  color: var(--color-bg-page);
+}
+
+.btn-danger,
+.btn-delete {
+  background: transparent;
+  border: 1px solid var(--color-danger);
+  color: var(--color-danger);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-weight: 700;
+  font-size: 0.7rem;
+  border-radius: var(--radius-btn);
+}
+.btn-danger:hover,
+.btn-delete:hover {
+  background: var(--color-danger);
+  color: var(--color-bg-page);
+  border-color: var(--color-danger);
+}
+
+/* --- Action bar (Editor) --- */
+.action-bar__btn {
+  font-size: 0.7rem;
+  letter-spacing: 0.1em;
+  border-radius: var(--radius-btn);
+}
+.action-bar__btn--danger {
+  color: var(--color-danger);
+  border-color: var(--color-danger);
+}
+.action-bar__btn--danger:hover {
+  background: var(--color-danger);
+  color: var(--color-bg-page);
+}
+
+/* --- Fragment row (Editor) — rounded, hairline, glowing accent stripe
+   on the row being edited --- */
+.fragment-row {
+  border-radius: var(--radius-box);
+  border-color: var(--color-border);
+  background: var(--color-bg-card);
+}
+.fragment-row:hover {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+}
+.fragment-row--editing {
+  border-color: var(--color-primary);
+  border-left: 4px solid var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 8%, var(--color-bg-card));
+  box-shadow: var(--glow-primary);
+}
+.fragment-row__time {
+  font-family: var(--font-mono);
+}
+
+/* Subtitle prompt banner */
+.subtitle-prompt {
+  background: color-mix(in srgb, var(--color-primary) 8%, transparent);
+  border: 1px solid color-mix(in srgb, var(--color-primary) 30%, transparent);
+  color: var(--color-primary);
+  border-radius: var(--radius-sm);
+  border-left-width: 3px;
+}
+
+.subtitle-display {
+  border-color: var(--color-border);
+  background: var(--color-bg-subtle);
+  border-radius: 0 0 var(--radius-box) var(--radius-box);
+}
+
+/* --- Sequence cards (FragmentLibrary) --- */
+.seq-card {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-box);
+  box-shadow: none;
+  transition: border-color 0.15s ease, background-color 0.15s ease;
+}
+.seq-card:hover,
+.seq-card--editing {
+  border-color: var(--color-primary);
+  background: color-mix(in srgb, var(--color-primary) 4%, var(--color-bg-card));
+  box-shadow: none;
+}
+.seq-label {
+  font-family: var(--font-mono);
+  font-weight: 700;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  font-size: 0.8rem;
+}
+.seq-controls__btn {
+  background: transparent;
+  border: 1px solid transparent;
+  color: var(--color-text-muted);
+  padding: 6px;
+  border-radius: var(--radius-icon);
+  text-transform: none;
+  letter-spacing: 0;
+}
+.seq-controls__btn:hover {
+  background: transparent;
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+}
+.seq-subtitle {
+  border-color: var(--color-border);
+  background: var(--color-bg-subtle);
+  font-family: var(--font-mono);
+  font-size: 0.78rem;
+  color: var(--color-text-secondary);
+}
+
+/* --- Theme toggle (in Settings modal): square segmented control --- */
+.theme-toggle {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  padding: 2px;
+}
+.theme-toggle__btn {
+  border-radius: var(--radius-sm);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.7rem;
+  font-weight: 700;
+  background: transparent;
+}
+.theme-toggle__btn--active {
+  background: var(--color-primary);
+  color: var(--color-bg-page);
+}
+
+/* --- Modals: square corners, theme-driven shadow + glow --- */
+.modal-box {
+  background: var(--color-bg-card);
+  border: 1px solid var(--color-border-strong);
+  border-radius: var(--radius-md);
+  box-shadow: var(--shadow-lg), var(--glow-primary);
+}
+
+/* --- Settings rows --- */
+.settings-group__title {
+  font-family: var(--font-mono);
+  text-transform: uppercase;
+  font-weight: 700;
+}
+.settings-value {
+  color: var(--color-primary);
+}
+
+/* --- Progress bar — sharp handle, primary glow --- */
+.progress-track {
+  background: var(--color-border);
+  border-radius: 0;
+}
+.progress-fill {
+  background: var(--color-primary);
+  border-radius: 0;
+}
+.progress-handle {
+  border-radius: 2px;
+  background: var(--color-primary);
+  border: 1px solid var(--color-primary);
+  box-shadow: 0 0 8px color-mix(in srgb, var(--color-primary) 40%, transparent);
+}
+.progress-time {
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+}
+
+/* --- Waveform canvas --- */
+.waveform-canvas {
+  border-color: var(--color-border);
+  border-radius: var(--radius-box);
+  background: var(--color-bg-page);
+}
+.waveform-zoom__btn {
+  font-size: 0.9rem;
+  width: 28px;
+  height: 28px;
+  padding: 0;
+  border-radius: var(--radius-icon);
+}
+
+/* --- Volume control --- */
+.volume-control__icon {
+  color: var(--color-text-muted);
+}
+
+/* --- File player time --- */
+.file-player__time,
+.file-info {
+  font-family: var(--font-mono);
+  color: var(--color-text-muted);
+  font-size: 0.78rem;
+}
+
+/* --- Spinners pick up theme colors --- */
+.spinner--wf {
+  border-top-color: var(--color-primary);
+}
+
+/* --- Equaliser loader --- */
+.eq-loader__bar {
+  background: var(--color-primary);
+}

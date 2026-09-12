@@ -1,0 +1,468 @@
+/* Google fonts — Geist + JetBrains Mono (Studio Dark) + Hanken Grotesk (Studio High-Contrast Light) */
+@import url("https://fonts.googleapis.com/css2?family=Geist:wght@400;500;600;700;900&family=Hanken+Grotesk:wght@400;500;600;700;800&family=JetBrains+Mono:wght@400;500;700&display=swap");
+
+/* === Design tokens — Light + Normal (default) ===
+   Studio High-Contrast Light: electric-blue primary, lavender-tinted neutrals,
+   Hanken Grotesk headlines + Inter body, 4px radii, hairline borders. */
+:root {
+  /* Primary palette — Electric Blue (HCL primary_container) */
+  --color-primary: #0052ff;
+  --color-primary-dark: #003ec7;
+  --color-primary-light: #b7c4ff;
+  --color-primary-bg: #dfe3ff;
+  --color-primary-bg-hover: #c8d0ff;
+  --color-primary-bg-active: #b7c4ff;
+
+  /* Accent — Teal tertiary (HCL tertiary) */
+  --color-accent: #005851;
+
+  /* Semantic */
+  --color-success: #16a34a;
+  --color-warning: #f59e0b;
+  --color-danger: #ba1a1a;
+  --color-danger-bg: #ffdad6;
+  --color-danger-hover: #93000a;
+
+  /* Neutrals — HCL surface/outline tokens */
+  --color-text: #131b2e;
+  --color-text-secondary: #434656;
+  --color-text-muted: #737688;
+  --color-border: #c3c5d9;
+  --color-border-strong: #737688;
+  --color-bg: #ffffff;
+  --color-bg-page: #faf8ff;
+  --color-bg-subtle: #f2f3ff;
+  --color-bg-card: #ffffff;
+
+  /* Shadows — HCL prefers tonal layers + hairline borders over ambient shadows */
+  --shadow-sm: 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-md: 0 2px 4px rgba(15, 23, 42, 0.06), 0 1px 2px rgba(15, 23, 42, 0.04);
+  --shadow-lg: 0 4px 12px rgba(15, 23, 42, 0.10), 0 2px 4px rgba(15, 23, 42, 0.06);
+
+  /* Glow — primary halo used by Studio Dark; transparent elsewhere by default */
+  --glow-primary: 0 0 0 transparent;
+
+  /* Background — ground colour, ground image and pattern layer
+     (see the end of this file) */
+  --bg-tint: var(--color-bg-page);
+  --bg-tint-strength: 14%;
+  --bg-ground-color: color-mix(in srgb, var(--bg-tint) var(--bg-tint-strength), var(--color-bg-page));
+  --bg-ground-image: none;
+  --bg-pattern-opacity: 0.14;
+  --bg-pattern-size: 72px;
+
+  /* Radii */
+  --radius-sm: 8px;
+  --radius-md: 12px;
+  --radius-lg: 16px;
+  --radius-pill: 999px;
+
+  /* Font stacks — HCL: Hanken Grotesk headlines + Inter body */
+  --font-body: "Inter", system-ui, -apple-system, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
+  --font-headline: "Hanken Grotesk", "Inter", system-ui, -apple-system, sans-serif;
+  --font-mono: "SF Mono", "Cascadia Code", "Fira Code", "JetBrains Mono", ui-monospace, monospace;
+
+  /* Typography */
+  font-family: var(--font-body);
+  line-height: 1.5;
+  font-weight: 400;
+  color: var(--color-text);
+  background-color: var(--bg-ground-color);
+  background-image: var(--bg-ground-image);
+  background-attachment: fixed;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+/* === Dark + Normal — slate/blue dark === */
+html[data-theme="dark"] {
+  --color-primary: #1a56db;
+  --color-primary-dark: #1342a8;
+  --color-primary-light: #3b82f6;
+  --color-accent: #ea580c;
+  --color-danger: #dc2626;
+  --color-danger-hover: #b91c1c;
+  --color-text: #e2e8f0;
+  --color-text-secondary: #cbd5e1;
+  --color-text-muted: #94a3b8;
+  --color-border: #334155;
+  --color-border-strong: #475569;
+  --color-bg: #1e293b;
+  --color-bg-page: #0f172a;
+  --color-bg-subtle: #1e293b;
+  --color-bg-card: #1e293b;
+  --color-primary-bg: #1e3a5f;
+  --color-primary-bg-hover: #1e3a8a;
+  --color-primary-bg-active: #1e40af;
+  --color-danger-bg: #3a1212;
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.4);
+  --shadow-md: 0 4px 8px -2px rgba(0, 0, 0, 0.5);
+  --shadow-lg: 0 12px 24px -6px rgba(0, 0, 0, 0.55);
+}
+
+html {
+    user-select: none;
+}
+
+/* The ground lives on html (see the pattern layer at the end of this file), so
+   body only carries the text colour — an opaque body would hide the pattern. */
+html[data-theme="dark"] body {
+  color: var(--color-text);
+}
+
+/* === Color theme: Pastel — soft, muted teal-rose === */
+html[data-color-theme="pastel"] {
+  --color-primary: #7c9eb2;
+  --color-primary-dark: #5e85a0;
+  --color-primary-light: #a3c0d0;
+  --color-success: #93c4a4;
+  --color-warning: #f0c987;
+  --color-danger: #d99a9a;
+  --color-danger-hover: #c47878;
+  --color-accent: #d9a37a;
+}
+html[data-color-theme="pastel"][data-theme="light"] {
+  --color-primary-bg: #eaf2f7;
+  --color-primary-bg-hover: #d6e6ef;
+  --color-primary-bg-active: #c2d9e6;
+  --color-bg-page: #fbf8f5;
+  --color-bg-subtle: #f3eee8;
+  --color-border: #e7ddd3;
+  --color-border-strong: #d6c9bd;
+}
+html[data-color-theme="pastel"][data-theme="dark"] {
+  --color-primary: #9bb8ca;
+  --color-primary-dark: #7c9eb2;
+  --color-primary-light: #bccfdc;
+  --color-primary-bg: #2a3845;
+  --color-primary-bg-hover: #34465a;
+  --color-primary-bg-active: #3f546c;
+  --color-bg-page: #1a1f24;
+  --color-bg: #232930;
+  --color-bg-card: #232930;
+  --color-bg-subtle: #2a3038;
+  --color-border: #3a414b;
+  --color-border-strong: #4a525e;
+  --color-text: #ece4d9;
+  --color-text-secondary: #c8bfb2;
+  --color-text-muted: #8a8174;
+}
+
+/* === Color theme: Neon (Light) — bright cyan === */
+html[data-color-theme="neon"] {
+  --color-primary: #00b8d4;
+  --color-primary-dark: #008fa6;
+  --color-primary-light: #18ffff;
+  --color-success: #00c853;
+  --color-warning: #ffab00;
+  --color-danger: #ff1744;
+  --color-danger-hover: #d50000;
+  --color-accent: #ff6b35;
+}
+html[data-color-theme="neon"][data-theme="light"] {
+  --color-primary-bg: #e0f7fa;
+  --color-primary-bg-hover: #b2ebf2;
+  --color-primary-bg-active: #80deea;
+}
+
+/* === Studio Dark — DAW-inspired dark mode (Dark + Neon)
+   Mirrors the Stitch "Sequence Player — Studio Dark" tokens:
+   slate-950 page, slate-900 cards, cyan-400 accent, orange-500 highlights,
+   Geist headlines and JetBrains Mono for timestamps. */
+html[data-color-theme="neon"][data-theme="dark"] {
+  --color-primary: #00e5ff;
+  --color-primary-dark: #00b8d4;
+  --color-primary-light: #5ceaff;
+  --color-primary-bg: #002e33;
+  --color-primary-bg-hover: #003e44;
+  --color-primary-bg-active: #004e55;
+
+  --color-accent: #ff6b35;
+
+  --color-bg-page: #0e1116;
+  --color-bg: #161b22;
+  --color-bg-card: #161b22;
+  --color-bg-subtle: #1f2733;
+
+  --color-border: #2a323d;
+  --color-border-strong: #3a4452;
+
+  --color-text: #e6edf3;
+  --color-text-secondary: #c9d1d9;
+  --color-text-muted: #8b949e;
+
+  --color-danger: #ff5470;
+  --color-danger-hover: #ff2d55;
+  --color-danger-bg: #2a1018;
+  --color-warning: #ffb454;
+  --color-success: #3fb950;
+
+  --shadow-sm: 0 1px 2px rgba(0, 0, 0, 0.6);
+  --shadow-md: 0 4px 10px -2px rgba(0, 0, 0, 0.7);
+  --shadow-lg: 0 16px 32px -8px rgba(0, 0, 0, 0.8);
+
+  --glow-primary: 0 0 12px rgba(0, 229, 255, 0.35);
+
+  --font-body: "Geist", "Inter", system-ui, -apple-system, "Segoe UI", Roboto, sans-serif;
+  --font-mono: "JetBrains Mono", "SF Mono", "Cascadia Code", "Fira Code", ui-monospace, monospace;
+}
+html[data-color-theme="neon"][data-theme="dark"] body {
+  font-family: var(--font-body);
+}
+/* Blend's ambient halos are this theme's ground, and move to html for the same
+   reason as above: nothing may paint an opaque background on html or body. */
+html[data-color-theme="neon"][data-theme="dark"] {
+  --bg-ground-image:
+    radial-gradient(1200px 600px at 80% -10%, rgba(0, 229, 255, 0.05), transparent 60%),
+    radial-gradient(900px 500px at -10% 110%, rgba(255, 107, 53, 0.04), transparent 60%);
+}
+html[data-color-theme="neon"][data-theme="dark"] h1,
+html[data-color-theme="neon"][data-theme="dark"] h2,
+html[data-color-theme="neon"][data-theme="dark"] h3 {
+  font-family: var(--font-body);
+  letter-spacing: -0.025em;
+}
+/* Logo keeps the theme's primary colour, but Blend drops the uppercase
+   mono treatment in favour of the humane headline face (see App.css). */
+html[data-color-theme="neon"][data-theme="dark"] .header__logo {
+  color: var(--color-primary);
+}
+
+/* === Studio Dark — full-app reskin (applied to ALL themes) =================
+   Sharp corners, uppercase tracking-tight headings, ghost buttons,
+   hairline borders, console-grade typography. Mirrors the Stitch
+   "Sequence Player — Studio Dark" design language. Colors stay
+   theme-driven via CSS variables so each palette is preserved.
+   ========================================================================= */
+:root {
+  /* Override the global radii so the entire app inherits sharp corners. */
+  --radius-sm: 2px;
+  --radius-md: 4px;
+  --radius-lg: 8px;
+  --radius-pill: 4px;
+
+  /* Blend radii — rounder than the Studio Dark base, borrowed from the
+     "Console" direction. Kept as separate tokens (rather than bumping the
+     sharp scale above) so chips, badges and inputs stay crisp while
+     buttons, icon buttons and boxes round off. */
+  --radius-btn: 8px;
+  --radius-icon: 7px;
+  --radius-box: 10px;
+  --radius-nav: 999px;
+}
+
+/* Global headings: uppercase, font-black, tracking-tight */
+h1 {
+  text-transform: uppercase;
+  font-weight: 900;
+  letter-spacing: -0.04em;
+}
+h2 {
+  text-transform: uppercase;
+  font-weight: 800;
+  letter-spacing: -0.025em;
+}
+h3 {
+  text-transform: uppercase;
+  font-weight: 700;
+  letter-spacing: -0.02em;
+  font-size: 0.85rem;
+}
+
+/* Global buttons: ghost-by-default, rounded, uppercase, mono accent */
+button {
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--color-border);
+  background: var(--color-bg);
+  color: var(--color-text-secondary);
+  text-transform: uppercase;
+  letter-spacing: 0.08em;
+  font-size: 0.75rem;
+  font-weight: 700;
+  padding: 8px 14px;
+  transition: border-color 0.15s ease, color 0.15s ease, background-color 0.15s ease;
+}
+button:hover {
+  border-color: var(--color-primary);
+  background: var(--color-bg);
+  color: var(--color-primary);
+}
+button:active {
+  background: var(--color-primary-bg);
+}
+button:focus-visible {
+  outline: 1px solid var(--color-primary);
+  outline-offset: 2px;
+  box-shadow: var(--glow-primary);
+}
+
+/* Custom thin scrollbar, console-grade — neutral by default,
+   cyan/primary on hover. Works in both light and dark themes. */
+*::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+*::-webkit-scrollbar-track {
+  background: var(--color-bg-page);
+}
+*::-webkit-scrollbar-thumb {
+  background: var(--color-border-strong);
+  border-radius: 0;
+}
+*::-webkit-scrollbar-thumb:hover {
+  background: var(--color-primary);
+}
+
+* {
+  box-sizing: border-box;
+}
+
+html {
+  font-size: 16px;
+  -webkit-text-size-adjust: 100%;
+  text-size-adjust: 100%;
+}
+
+body {
+  margin: 0;
+  font-size: 1rem;
+  min-width: 320px;
+  min-height: 100vh;
+  overflow-x: hidden;
+}
+
+/* clip, not hidden. #root is only as tall as the page content, and the mobile
+   drawer is absolutely positioned inside the sticky header, so it hangs below
+   that box. `overflow-x: hidden` forces overflow-y to `auto`, which clipped
+   the drawer at the bottom of the page — on short pages the submenu was still
+   painted but had no hit region, so taps fell through to the drawer overlay
+   and closed the whole menu. `clip` leaves overflow-y genuinely `visible`, so
+   the clip rectangle stays infinite vertically while wide content is still
+   kept from scrolling the page sideways. */
+#root {
+  width: 100%;
+  max-width: 100vw;
+  overflow-x: clip;
+}
+
+h1 { font-size: 1.75rem; line-height: 1.1; font-weight: 700; color: var(--color-text); }
+h2 { font-size: 1.35rem; margin-top: 0.5em; font-weight: 700; color: var(--color-text); }
+h3 { font-size: 1.1rem; font-weight: 600; color: var(--color-text); }
+
+/* === Global button === */
+button {
+  border-radius: var(--radius-btn);
+  border: 1px solid var(--color-border);
+  padding: 10px 22px;
+  font-size: 0.95rem;
+  font-weight: 600;
+  font-family: inherit;
+  background-color: var(--color-bg);
+  color: var(--color-text);
+  cursor: pointer;
+  transition: all 0.2s ease;
+  touch-action: manipulation;
+}
+button:hover {
+  border-color: var(--color-primary-light);
+  background-color: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+button:active {
+  background-color: var(--color-primary-bg-hover);
+}
+button:disabled {
+  opacity: 0.45;
+  cursor: not-allowed;
+}
+button:focus-visible {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+
+input[type="range"] {
+  touch-action: manipulation;
+  accent-color: var(--color-primary);
+}
+
+/* ===== Mobile overrides via JS-set class ===== */
+html.mobile {
+  font-size: 17px;
+}
+html.mobile h1 { font-size: 1.5rem; }
+html.mobile h2 { font-size: 1.25rem; }
+html.mobile h3 { font-size: 1.05rem; }
+html.mobile button {
+  font-size: 1rem;
+  padding: 10px 22px;
+  min-height: 44px;
+}
+
+
+/* === Background pattern ===================================================
+   A background is one black SVG tile. It is applied as a mask and tinted with
+   `--bg-pattern-color` — the colour chosen for that background, defaulting to
+   the theme's own `--color-text` — so a single tile serves all six theme x
+   colour-theme combinations instead of needing a recoloured copy of each.
+
+   Where the layer sits matters: `html::before` at `z-index: -1` paints after
+   the ground (html's own background) and before every in-flow background —
+   and since cards, rows, modals and the waveform panel are all opaque, the
+   pattern can only ever show in the margins around them. That is also why
+   nothing else may paint an opaque background on `html` or `body`.
+
+   Nothing is hard-coded here any more. The tile is built at runtime from the
+   selected background's own SVG drawings and written to `--bg-pattern` (plus
+   `--bg-pattern-size`, which must stay the tile's real pixel size or the
+   drawings stop being 40px tall) by utils/backgroundRuntime.ts. Its only job
+   here is to be shown at all, which is what `data-bg-pattern="custom"` does.
+   ========================================================================= */
+
+html::before {
+  content: "";
+  display: none;
+  position: fixed;
+  inset: 0;
+  z-index: -1;
+  pointer-events: none;
+  background-color: var(--bg-pattern-color, var(--color-text));
+  opacity: var(--bg-pattern-opacity);
+  -webkit-mask-image: var(--bg-pattern);
+  mask-image: var(--bg-pattern);
+  -webkit-mask-size: var(--bg-pattern-size);
+  mask-size: var(--bg-pattern-size);
+  -webkit-mask-repeat: repeat;
+  mask-repeat: repeat;
+}
+
+html[data-bg-pattern="custom"]::before {
+  display: block;
+}
+
+/* Light ink on a dark ground reads stronger at the same alpha, so dark sits a
+   little under light to land at the same apparent weight. */
+html[data-theme="dark"] {
+  --bg-pattern-opacity: 0.12;
+}
+
+
+/* === Background colour ====================================================
+   The colour the user picked in Settings, mixed into the theme's own page
+   colour rather than replacing it. One hex then works in light and dark alike:
+   the same green over a near-white ground reads as pale sage, and over a near-
+   black one as a deep forest, and every colour theme keeps its own character.
+
+   There is no rule for it here: `applyBgTint` sets `--bg-tint` on <html>
+   itself, since the value is a free colour rather than one of a fixed set.
+   Without it the `:root` default below stands and the ground is the theme's.
+   ========================================================================= */
+
+/* A dark ground swallows a hue the way it swallows the pattern tint, so the
+   same colours are mixed in a little harder there. Not much harder, though:
+   the cards keep their own slate, and a strong hue behind them reads as two
+   designs fighting rather than one tinted room. */
+html[data-theme="dark"] {
+  --bg-tint-strength: 16%;
+}
