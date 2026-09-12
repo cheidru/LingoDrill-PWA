@@ -358,7 +358,7 @@ function FragmentEditorPageInner() {
       if (newSeq) {
         currentSeqIdRef.current = newSeq.id
         setCurrentSeqId(newSeq.id)
-        window.history.replaceState(null, "", `/LingoDrill-js/file/${audioId}/editor/${newSeq.id}`)
+        window.history.replaceState(null, "", `${import.meta.env.BASE_URL}file/${audioId}/editor/${newSeq.id}`)
       }
     }
   }, [audioId, sequences, addSequence, updateSequence])
@@ -406,7 +406,7 @@ function FragmentEditorPageInner() {
       if (!newSeq) return ""
       currentSeqIdRef.current = newSeq.id
       setCurrentSeqId(newSeq.id)
-      window.history.replaceState(null, "", `/LingoDrill-js/file/${audioId}/editor/${newSeq.id}`)
+      window.history.replaceState(null, "", `${import.meta.env.BASE_URL}file/${audioId}/editor/${newSeq.id}`)
       label = newSeq.label
     }
 

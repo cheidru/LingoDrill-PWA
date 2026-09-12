@@ -16,7 +16,11 @@ There is no test framework in this project.
 
 ## Architecture
 
-LingoDrill is a React + Vite + TypeScript SPA for language learning via audio fragment drilling. It is deployed to GitHub Pages at `/LingoDrill-js` (basename is hardcoded in `App.tsx`).
+LingoDrill is a React + Vite + TypeScript installable PWA for language learning via audio fragment drilling. It is deployed to GitHub Pages at `/LingoDrill-PWA/`. That path is set once, as `BASE` in `vite.config.ts`; the router basename and in-app URLs derive it from `import.meta.env.BASE_URL`, so never hardcode it.
+
+### PWA
+
+`vite-plugin-pwa` in `vite.config.ts` generates the manifest and a Workbox service worker that precaches the app shell and serves `index.html` for navigations (deep links work offline). All user data is in IndexedDB, so the whole app works offline. `registerType: 'prompt'` with no prompt UI means a new deploy activates on the next launch, never mid-session. Install icons (`public/pwa-*.png`, `maskable-icon-512x512.png`) are generated from `public/favicon.svg` by `npm run generate-pwa-assets` (config: `pwa-assets.config.ts`).
 
 ### Layers
 

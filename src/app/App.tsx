@@ -48,8 +48,7 @@ function StartPageEntry() {
 
 export default function App() {
   return (
-    // <BrowserRouter>
-    <BrowserRouter basename="/LingoDrill-js">
+    <BrowserRouter basename={import.meta.env.BASE_URL.replace(/\/$/, "")}>
       <AudioEngineProvider>
         <Header />
         <Routes>

@@ -1,8 +1,8 @@
 {
-  "name": "lingodrill-js",
+  "name": "lingodrill-pwa",
   "private": true,
   "version": "0.0.0",
-  "homepage": "https://cheidru.github.io/LingoDrill-js/",
+  "homepage": "https://cheidru.github.io/LingoDrill-PWA/",
   "type": "module",
   "scripts": {
     "dev": "vite",
@@ -10,7 +10,8 @@
     "lint": "eslint .",
     "preview": "vite preview",
     "predeploy": "npm run build",
-    "deploy": "gh-pages -d dist"
+    "deploy": "gh-pages -d dist",
+    "generate-pwa-assets": "pwa-assets-generator"
   },
   "dependencies": {
     "idb": "^8.0.2",
@@ -24,6 +25,7 @@
     "@types/node": "^24.10.1",
     "@types/react": "^19.2.7",
     "@types/react-dom": "^19.2.3",
+    "@vite-pwa/assets-generator": "^1.0.4",
     "@vitejs/plugin-react": "^5.1.1",
     "eslint": "^9.39.1",
     "eslint-plugin-react-hooks": "^7.0.1",
@@ -32,6 +34,7 @@
     "globals": "^16.5.0",
     "typescript": "~5.9.3",
     "typescript-eslint": "^8.48.0",
-    "vite": "^7.3.1"
+    "vite": "^7.3.1",
+    "vite-plugin-pwa": "^1.3.0"
   }
 }

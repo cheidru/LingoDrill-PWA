@@ -1,5 +1,6 @@
 import { defineConfig } from 'vite'
 import react from '@vitejs/plugin-react'
+import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 import { writeFileSync, readFileSync } from 'fs'
 
@@ -33,9 +34,50 @@ function ghPagesSpaPlugin() {
   }
 }
 
+// GitHub Pages serves the site from /<repo-name>/. The router basename and
+// the PWA scope are both derived from this, so it is the only place to change.
+const BASE = '/LingoDrill-PWA/'
+
 // https://vite.dev/config/
 export default defineConfig({
-  // base: '/',
-  base: '/LingoDrill-js/',
-  plugins: [react(), ghPagesSpaPlugin()],
+  base: BASE,
+  plugins: [
+    react(),
+    ghPagesSpaPlugin(),
+    VitePWA({
+      // 'prompt' without a prompt UI: a new version installs in the background
+      // and takes over the next time the app is opened, instead of reloading
+      // the page mid-drill or mid-edit.
+      registerType: 'prompt',
+      injectRegister: 'auto',
+      includeAssets: ['favicon.svg', 'favicon.ico', 'apple-touch-icon.png'],
+      manifest: {
+        id: BASE,
+        name: 'LingoDrill',
+        short_name: 'LingoDrill',
+        description: 'Language learning by drilling audio fragments',
+        start_url: BASE,
+        scope: BASE,
+        display: 'standalone',
+        orientation: 'any',
+        background_color: '#faf8ff',
+        theme_color: '#14b8ab',
+        icons: [
+          { src: 'pwa-64x64.png', sizes: '64x64', type: 'image/png' },
+          { src: 'pwa-192x192.png', sizes: '192x192', type: 'image/png' },
+          { src: 'pwa-512x512.png', sizes: '512x512', type: 'image/png' },
+          { src: 'maskable-icon-512x512.png', sizes: '512x512', type: 'image/png', purpose: 'maskable' },
+        ],
+      },
+      workbox: {
+        // Audio, subtitles and sequences live in IndexedDB, so precaching the
+        // app shell is enough for the whole app to work offline.
+        globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
+        // Deep links (/file/:id/player/:seqId) are client routes: serve the shell.
+        navigateFallback: `${BASE}index.html`,
+        maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
+        cleanupOutdatedCaches: true,
+      },
+    }),
+  ],
 })
