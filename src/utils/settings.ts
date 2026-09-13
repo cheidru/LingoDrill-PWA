@@ -57,10 +57,10 @@ export const DEFAULT_BG_COLOR: BgColor = "default"
 
 /* The swatch rows in Settings, after sDraw's: pastels for the light theme,
    near-blacks of the same hues for the dark one. The pastels are sDraw's with
-   saturation cut by 30% three times (to 34%) at the same lightness — full
-   strength they drowned the cards standing on them. */
+   saturation cut by 30% three times and then 20% (to 27%) at the same
+   lightness — full strength they drowned the cards standing on them. */
 export const BG_PALETTES: Record<Theme, string[]> = {
-  light: ["#e3c4c4", "#e4c8dc", "#d1cfe8", "#c6e2e4", "#cde5ca", "#e6e6cc", "#e5d8ca", "#ffffff", "#b8b8b8"],
+  light: ["#e0c7c7", "#e1cbdb", "#d3d2e5", "#c9e0e1", "#cfe2cd", "#e4e4ce", "#e2d8cd", "#ffffff", "#b8b8b8"],
   dark: ["#300000", "#30002a", "#050535", "#00292b", "#012601", "#2e2e00", "#2b1603", "#333333", "#000000"],
 }
 
