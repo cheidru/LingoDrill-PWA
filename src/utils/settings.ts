@@ -1,3 +1,5 @@
+import { HEX_COLOR, clamp, hexToHsl, hslToHex } from "./color"
+
 export type StartPage = "library" | "favourites" | "last-sequence"
 export type Language = "en" | "ru"
 export type Theme = "light" | "dark"
@@ -10,22 +12,9 @@ export const SETTINGS_SECTIONS: SettingsSection[] = ["general", "appearance", "p
 export const DEFAULT_SETTINGS_SECTION: SettingsSection = "general"
 export const isSettingsSection = (v: string | undefined): v is SettingsSection =>
   SETTINGS_SECTIONS.includes(v as SettingsSection)
-/* Which background is tiled behind the page: `BG_PATTERN_NONE`, or the id of a
-   background — the one the app ships with, or one the user built out of their
-   own SVG files on the Backgrounds page. It is a free id rather than a closed
-   union because the user makes the options; see utils/backgroundPattern.ts for
-   what an id resolves to and utils/backgroundRuntime.ts for how it reaches CSS.
-   "none" is the default so nobody's app changes appearance under them. */
-export type BgPattern = string
-export const BG_PATTERN_NONE = "none"
-/* Colour mixed into the page ground: "default" leaves the theme's own colour
-   alone, anything else is a `#rrggbb` the user picked.
-
-   The hue is the user's choice; how far it is allowed to carry is not. A pick
-   is pulled into the saturation/lightness band the app was designed around
-   (see `normalizeBgTint`) before it is stored, so no colour can wash the
-   ground out or drown the cards standing on it. */
-export type BgTint = string
+/* The page ground of one theme: "default" leaves the theme's own colour alone,
+   anything else is a `#rrggbb`. Light and dark each keep their own. */
+export type BgColor = string
 
 const KEY_START_PAGE = "lingodrill.startPage"
 const KEY_SUB_FONT_SIZE = "lingodrill.subFontSize"
@@ -35,8 +24,14 @@ const KEY_TRIM_SILENCE_GAP = "lingodrill.trimSilenceGap"
 const KEY_LANGUAGE = "lingodrill.language"
 const KEY_THEME = "lingodrill.theme"
 const KEY_COLOR_THEME = "lingodrill.colorTheme"
-const KEY_BG_PATTERN = "lingodrill.bgPattern"
-const KEY_BG_TINT = "lingodrill.bgTint"
+const KEY_BG_COLOR: Record<Theme, string> = {
+  light: "lingodrill.bgColorLight",
+  dark: "lingodrill.bgColorDark",
+}
+const KEY_BG_USER_COLORS: Record<Theme, string> = {
+  light: "lingodrill.bgUserColorsLight",
+  dark: "lingodrill.bgUserColorsDark",
+}
 const KEY_ONBOARDING_SEEN = "lingodrill.onboardingSeen"
 
 export const DEFAULT_START_PAGE: StartPage = "library"
@@ -58,91 +53,36 @@ export const DEFAULT_LANGUAGE: Language = "en"
 export const AVAILABLE_LANGUAGES: Language[] = ["en", "ru"]
 export const DEFAULT_THEME: Theme = "light"
 export const DEFAULT_COLOR_THEME: ColorTheme = "normal"
-export const DEFAULT_BG_PATTERN: BgPattern = BG_PATTERN_NONE
-export const DEFAULT_BG_TINT: BgTint = "default"
-/* Where the colour picker opens before anything has been chosen — the sage the
-   old fixed palette led with. */
-export const DEFAULT_TINT_COLOR = "#4f8a63"
-/* The band every pick is pulled into. Its edges are the range the six retired
-   presets covered, which is what the mix strength in index.css was tuned for:
-   below it a colour vanishes into the page, above it the ground starts
-   competing with the cards. A colour the user picked as grey stays grey —
-   raising its saturation would hand them a hue they did not ask for. */
-const TINT_SATURATION_MIN = 12
-const TINT_SATURATION_MAX = 60
-const TINT_LIGHTNESS_MIN = 40
-const TINT_LIGHTNESS_MAX = 62
-const TINT_ACHROMATIC = 4
+export const DEFAULT_BG_COLOR: BgColor = "default"
 
-/* Values written before the picker replaced the named palette. */
-const LEGACY_TINTS: Record<string, string> = {
-  sage: "#4f8a63",
-  sand: "#b08843",
-  clay: "#c0605f",
-  sky: "#3d7fd6",
-  lilac: "#8271cf",
-  slate: "#5b6b82",
+/* The swatch rows in Settings, after sDraw's: pastels for the light theme,
+   near-blacks of the same hues for the dark one. The pastels are sDraw's with
+   saturation cut by 30% twice (to 49%) at the same lightness — full strength
+   they drowned the cards standing on them. */
+export const BG_PALETTES: Record<Theme, string[]> = {
+  light: ["#e9bebe", "#eac2df", "#cccaed", "#c0e8ea", "#c8ebc4", "#ececc6", "#ebd8c4", "#ffffff", "#b8b8b8"],
+  dark: ["#300000", "#30002a", "#050535", "#00292b", "#012601", "#2e2e00", "#2b1603", "#333333", "#000000"],
 }
 
-const HEX_COLOR = /^#[0-9a-fA-F]{6}$/
-
-function clamp(n: number, min: number, max: number): number {
-  return Math.min(max, Math.max(min, n))
-}
-
-function hexToHsl(hex: string): { h: number; s: number; l: number } {
-  const r = parseInt(hex.slice(1, 3), 16) / 255
-  const g = parseInt(hex.slice(3, 5), 16) / 255
-  const b = parseInt(hex.slice(5, 7), 16) / 255
-
-  const max = Math.max(r, g, b)
-  const min = Math.min(r, g, b)
-  const l = (max + min) / 2
-  const d = max - min
-  if (d === 0) return { h: 0, s: 0, l: l * 100 }
-
-  const s = d / (1 - Math.abs(2 * l - 1))
-  let h: number
-  if (max === r) h = ((g - b) / d) % 6
-  else if (max === g) h = (b - r) / d + 2
-  else h = (r - g) / d + 4
-  h *= 60
-  if (h < 0) h += 360
-
-  return { h, s: s * 100, l: l * 100 }
-}
-
-function hslToHex(h: number, s: number, l: number): string {
-  const sn = s / 100
-  const ln = l / 100
-  const c = (1 - Math.abs(2 * ln - 1)) * sn
-  const x = c * (1 - Math.abs(((h / 60) % 2) - 1))
-  const m = ln - c / 2
-
-  let r = 0
-  let g = 0
-  let b = 0
-  if (h < 60) { r = c; g = x }
-  else if (h < 120) { r = x; g = c }
-  else if (h < 180) { g = c; b = x }
-  else if (h < 240) { g = x; b = c }
-  else if (h < 300) { r = x; b = c }
-  else { r = c; b = x }
-
-  const byte = (v: number) => Math.round((v + m) * 255).toString(16).padStart(2, "0")
-  return `#${byte(r)}${byte(g)}${byte(b)}`
+/* How far a free pick may stray towards the other theme. Text colours are the
+   theme's, so a light ground darker than this (or a dark one lighter) starts
+   to swallow the type standing on it. Hue and saturation stay the user's. */
+const BG_LIGHTNESS_LIMIT: Record<Theme, [number, number]> = {
+  light: [70, 100],
+  dark: [0, 25],
 }
 
 /**
- * Keeps the picked hue, pulls its saturation and lightness into the band the
- * ground was designed for. Anything that is not a `#rrggbb` falls back to the
- * default colour rather than reaching CSS as a value it cannot parse.
+ * Keeps the picked hue and saturation, pulls lightness into the band the theme
+ * can carry text over. A colour already inside it is returned untouched (just
+ * lower-cased), so palette colours survive the HSL round trip exactly.
  */
-export function normalizeBgTint(hex: string): string {
-  const source = HEX_COLOR.test(hex) ? hex : DEFAULT_TINT_COLOR
-  const { h, s, l } = hexToHsl(source)
-  const saturation = s < TINT_ACHROMATIC ? s : clamp(s, TINT_SATURATION_MIN, TINT_SATURATION_MAX)
-  return hslToHex(h, saturation, clamp(l, TINT_LIGHTNESS_MIN, TINT_LIGHTNESS_MAX))
+export function normalizeBgColor(hex: string, theme: Theme): string {
+  if (!HEX_COLOR.test(hex)) return DEFAULT_BG_COLOR
+  const { h, s, l } = hexToHsl(hex)
+  const [min, max] = BG_LIGHTNESS_LIMIT[theme]
+  if (l >= min && l <= max) return hex.toLowerCase()
+  return hslToHex(h, s, clamp(l, min, max))
 }
 
 export function getStartPage(): StartPage {
@@ -262,41 +202,66 @@ export function applyColorTheme(v: ColorTheme = getColorTheme()): void {
   document.documentElement.setAttribute("data-color-theme", v)
 }
 
-/* No validation against a list of known ids — the backgrounds live in
-   IndexedDB, which cannot be read from here. An id that no longer resolves is
-   caught where it is resolved (utils/backgroundRuntime.ts), which falls back to
-   no pattern rather than leaving the page wearing a mask that is not there. */
-export function getBgPattern(): BgPattern {
-  return localStorage.getItem(KEY_BG_PATTERN) || DEFAULT_BG_PATTERN
+/* Retired background settings: the pattern (its choice and its cached tile,
+   which can be large — a data: URI of every drawing) and the single tint that
+   was mixed into both themes before each theme got its own colour. Nothing
+   reads them any more, so they would otherwise sit in localStorage forever. */
+export function clearRetiredBgSettings(): void {
+  localStorage.removeItem("lingodrill.bgPattern")
+  localStorage.removeItem("lingodrill.bgPatternTile")
+  localStorage.removeItem("lingodrill.bgTint")
 }
 
-export function setBgPattern(v: BgPattern): void {
-  localStorage.setItem(KEY_BG_PATTERN, v)
-}
-
-export function getBgTint(): BgTint {
-  const v = localStorage.getItem(KEY_BG_TINT)
-  if (!v || v === DEFAULT_BG_TINT) return DEFAULT_BG_TINT
-  if (LEGACY_TINTS[v]) return normalizeBgTint(LEGACY_TINTS[v])
-  if (HEX_COLOR.test(v)) return normalizeBgTint(v)
-  return DEFAULT_BG_TINT
+export function getBgColor(theme: Theme): BgColor {
+  const v = localStorage.getItem(KEY_BG_COLOR[theme])
+  return v ? normalizeBgColor(v, theme) : DEFAULT_BG_COLOR
 }
 
 /* Normalised on the way in, so what is stored is the colour the page actually
    wears — nothing downstream has to re-derive it. */
-export function setBgTint(v: BgTint): void {
-  const next = v === DEFAULT_BG_TINT ? DEFAULT_BG_TINT : normalizeBgTint(v)
-  localStorage.setItem(KEY_BG_TINT, next)
-  applyBgTint(next)
+export function setBgColor(theme: Theme, v: BgColor): void {
+  const next = v === DEFAULT_BG_COLOR ? DEFAULT_BG_COLOR : normalizeBgColor(v, theme)
+  localStorage.setItem(KEY_BG_COLOR[theme], next)
+  applyBgColors()
 }
 
-/* The one setting whose value is not a fixed name, so it is carried by the
-   `--bg-tint` custom property on <html> instead of a data attribute; the
-   `:root` default in index.css takes over again once it is removed. */
-export function applyBgTint(v: BgTint = getBgTint()): void {
+/* Slots at the end of each swatch row that the user fills from the colour
+   picker dialog. `null` is an empty slot. */
+export const BG_USER_SLOTS = 3
+
+export function getBgUserColors(theme: Theme): (string | null)[] {
+  let stored: unknown = null
+  try {
+    stored = JSON.parse(localStorage.getItem(KEY_BG_USER_COLORS[theme]) ?? "null")
+  } catch {
+    // ignore — treated as all slots empty
+  }
+  const list = Array.isArray(stored) ? stored : []
+  return Array.from({ length: BG_USER_SLOTS }, (_, i) => {
+    const v = list[i]
+    return typeof v === "string" && HEX_COLOR.test(v) ? normalizeBgColor(v, theme) : null
+  })
+}
+
+/* Normalised like the ground itself, so a saved slot always holds a colour the
+   theme can actually wear. */
+export function setBgUserColor(theme: Theme, index: number, hex: string): void {
+  if (index < 0 || index >= BG_USER_SLOTS || !HEX_COLOR.test(hex)) return
+  const next = getBgUserColors(theme)
+  next[index] = normalizeBgColor(hex, theme)
+  localStorage.setItem(KEY_BG_USER_COLORS[theme], JSON.stringify(next))
+}
+
+/* Free colours, so they travel as `--bg-light` / `--bg-dark` custom properties
+   on <html> rather than data attributes. index.css picks the one matching the
+   active theme, which is why switching theme needs no call here. */
+export function applyBgColors(): void {
   const root = document.documentElement
-  if (v === DEFAULT_BG_TINT) root.style.removeProperty("--bg-tint")
-  else root.style.setProperty("--bg-tint", v)
+  for (const theme of ["light", "dark"] as Theme[]) {
+    const v = getBgColor(theme)
+    if (v === DEFAULT_BG_COLOR) root.style.removeProperty(`--bg-${theme}`)
+    else root.style.setProperty(`--bg-${theme}`, v)
+  }
 }
 
 export function hasSeenOnboarding(): boolean {

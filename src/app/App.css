@@ -604,14 +604,288 @@ html.mobile .header__overlay {
 .settings-swatch__dot--pastel { background: linear-gradient(135deg, #7c9eb2, #d9a37a); }
 .settings-swatch__dot--neon { background: linear-gradient(135deg, #00e5ff, #ff6b35); }
 
-/* Tint swatches show the ground the option actually produces. The theme dot is
-   the untinted page colour; the picker dot is the live ground, so it is the
-   colour the user chose mixed exactly as the page mixes it. Until something is
-   chosen that dot has nothing to show, and wears a colour wheel instead. */
-.settings-swatch__dot--tint-default { background: var(--color-bg-page); }
-.settings-swatch__dot--tint-custom { background: var(--bg-ground-color); }
-.settings-swatch__dot--tint-pick {
-  background: conic-gradient(#c0605f, #b08843, #4f8a63, #3d7fd6, #8271cf, #c0605f);
+/* --- Background colour ---
+   After sDraw: a plain sample box, then two swatch rows (light theme over dark
+   theme) with a tall palette button beside them. Swatch colours are literal —
+   they must show the ground they produce, not follow the active theme. */
+.bg-picker {
+  display: flex;
+  flex-direction: column;
+  gap: 12px;
+  width: 100%;
+}
+.bg-picker__sample {
+  position: relative;
+  height: 96px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  transition: background-color 0.2s ease;
+}
+.bg-picker__sample-label {
+  position: absolute;
+  left: 12px;
+  bottom: 10px;
+  font-size: 0.8rem;
+  font-weight: 600;
+}
+.bg-picker__sample--light .bg-picker__sample-label { color: #1f2330; }
+.bg-picker__sample--dark .bg-picker__sample-label { color: #e6e8ef; }
+.bg-picker__sample .settings-reset {
+  position: absolute;
+  top: 8px;
+  right: 8px;
+}
+.bg-picker__body {
+  display: flex;
+  gap: 8px;
+  align-items: stretch;
+}
+.bg-picker__rows {
+  flex: 1 1 0;
+  min-width: 0;
+  display: flex;
+  flex-direction: column;
+  gap: 6px;
+}
+/* 9 palette swatches, a 2px spacer column, then the 3 user slots — the extra
+   gap sets the user's own colours apart from the fixed ones. */
+.bg-picker__row {
+  display: grid;
+  grid-template-columns: repeat(9, minmax(0, 1fr)) 2px repeat(3, minmax(0, 1fr));
+  gap: 4px;
+}
+.bg-picker__row > :nth-child(10) {
+  grid-column: 11;
+}
+.bg-picker__swatch {
+  aspect-ratio: 1;
+  max-width: 100%;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid rgba(0, 0, 0, 0.28);
+  border-radius: 28%;
+  cursor: pointer;
+  transition: transform 0.12s ease;
+}
+.bg-picker__row--light .bg-picker__swatch { color: #1b1b1f; }
+.bg-picker__row--dark .bg-picker__swatch { color: #ffffff; border-color: rgba(255, 255, 255, 0.18); }
+.bg-picker__swatch:hover:not(:disabled) { transform: scale(1.06); }
+.bg-picker__swatch--checked {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.bg-picker__swatch:disabled {
+  opacity: 0.3;
+  cursor: not-allowed;
+}
+.bg-picker__swatch svg {
+  width: 62%;
+  height: 62%;
+}
+.bg-picker__swatch--empty,
+.bg-picker__row--dark .bg-picker__swatch--empty {
+  background: transparent;
+  border: 2px dashed var(--color-border-strong);
+  color: var(--color-text-muted);
+}
+.bg-picker__swatch--empty svg {
+  width: 50%;
+  height: 50%;
+}
+.bg-picker__custom {
+  flex: 0 0 48px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+}
+.bg-picker__custom:hover,
+.bg-picker__custom--active {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+
+/* --- Colour picker dialog --- */
+.cp-dialog {
+  --cp-size: min(280px, 68vw);
+  display: flex;
+  flex-direction: column;
+  gap: 14px;
+  width: calc(var(--cp-size) + 72px);
+  max-width: calc(100vw - 32px);
+  min-width: 0;
+  padding: 16px;
+  box-sizing: border-box;
+}
+.cp-tabs {
+  display: flex;
+  justify-content: center;
+  gap: 10px;
+}
+.cp-tab {
+  width: 56px;
+  height: 40px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+  color: var(--color-text-secondary);
+}
+.cp-tab--active,
+.cp-tab--active:hover {
+  border-color: var(--color-primary);
+  background: var(--color-primary-bg);
+  color: var(--color-primary);
+}
+.cp-stage {
+  height: var(--cp-size);
+  display: flex;
+  justify-content: center;
+}
+.cp-square {
+  display: flex;
+  gap: 12px;
+  width: 100%;
+}
+.cp-sv {
+  position: relative;
+  flex: 1 1 0;
+  border-radius: var(--radius-sm);
+  background-image: linear-gradient(to bottom, #000, transparent), linear-gradient(to right, #fff, transparent);
+  touch-action: none;
+  cursor: crosshair;
+}
+.cp-hue {
+  position: relative;
+  flex: 0 0 28px;
+  border-radius: var(--radius-sm);
+  background: linear-gradient(to bottom, #f00 0%, #ff0 16.67%, #0f0 33.33%, #0ff 50%, #00f 66.67%, #f0f 83.33%, #f00 100%);
+  touch-action: none;
+  cursor: ns-resize;
+}
+.cp-hue__knob {
+  position: absolute;
+  left: -3px;
+  right: -3px;
+  height: 10px;
+  transform: translateY(-50%);
+  border: 3px solid #111;
+  border-radius: 3px;
+  box-shadow: 0 0 0 2px #fff;
+  pointer-events: none;
+}
+.cp-knob {
+  position: absolute;
+  width: 18px;
+  height: 18px;
+  transform: translate(-50%, -50%);
+  border: 3px solid #fff;
+  border-radius: 50%;
+  box-shadow: 0 0 0 1.5px rgba(0, 0, 0, 0.75);
+  pointer-events: none;
+}
+.cp-wheel {
+  position: relative;
+  width: var(--cp-size);
+  height: var(--cp-size);
+}
+/* 28px ring: keep in step with RING_WIDTH in ColorPickerDialog.tsx. */
+.cp-ring {
+  position: absolute;
+  inset: 0;
+  border-radius: 50%;
+  -webkit-mask: radial-gradient(farthest-side, transparent calc(100% - 29px), #000 calc(100% - 28px));
+  mask: radial-gradient(farthest-side, transparent calc(100% - 29px), #000 calc(100% - 28px));
+  touch-action: none;
+  cursor: pointer;
+}
+.cp-diamond {
+  position: absolute;
+  left: 50%;
+  top: 50%;
+  width: calc((var(--cp-size) / 2 - 40px) * 1.4142);
+  height: calc((var(--cp-size) / 2 - 40px) * 1.4142);
+  transform: translate(-50%, -50%) rotate(45deg);
+  background-image: linear-gradient(to top, #000, transparent), linear-gradient(to right, #fff, transparent);
+  touch-action: none;
+  cursor: crosshair;
+}
+.cp-footer {
+  display: flex;
+  gap: 10px;
+  align-items: stretch;
+}
+.cp-preview {
+  flex: 1 1 0;
+  min-width: 0;
+  min-height: 40px;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+}
+.cp-hex {
+  flex: 1 1 0;
+  width: 0;
+  min-width: 0;
+  padding: 8px 4px;
+  text-align: center;
+  font-family: var(--font-mono);
+  font-size: 0.85rem;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-sm);
+  background: var(--color-bg-subtle);
+  color: var(--color-text);
+}
+.cp-slots {
+  display: flex;
+  align-items: center;
+  gap: 10px;
+}
+.cp-slots__label {
+  flex: 1 1 auto;
+  text-align: left;
+  font-size: 0.8rem;
+  font-weight: 600;
+  color: var(--color-text-secondary);
+}
+.cp-slot {
+  flex: 0 0 40px;
+  height: 40px;
+  min-height: 0;
+  padding: 0;
+  display: grid;
+  place-items: center;
+  border: 2px solid var(--color-border-strong);
+  border-radius: 28%;
+  cursor: pointer;
+}
+.cp-slot--empty {
+  background: transparent;
+  border-style: dashed;
+  color: var(--color-text-muted);
+}
+.cp-slot:hover {
+  outline: 2px solid var(--color-primary);
+  outline-offset: 2px;
+}
+.cp-apply {
+  flex: 1.5 1 0;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  gap: 6px;
+  padding: 8px 10px;
+  white-space: nowrap;
 }
 
 
@@ -1275,228 +1549,6 @@ html.mobile .modal-actions {
 html.mobile .settings-group__title {
   font-size: 0.72rem;
 }
-/* A segmented button standing on its own rather than inside a group: same
-   shape, but it has to carry its own border since there is no group to sit in. */
-.settings-seg__btn--standalone {
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-btn);
-  background: var(--color-bg);
-  flex: 0 0 auto;
-}
-.settings-seg__btn--standalone:hover {
-  border-color: var(--color-primary);
-  background: var(--color-primary-bg);
-  color: var(--color-primary);
-}
-/* Shows a name rather than a number, so it drops the tabular figures and the
-   fixed width and takes the room it needs instead. */
-.settings-value--wide {
-  flex: 1 1 auto;
-  font-family: inherit;
-  min-width: 0;
-  overflow: hidden;
-  text-overflow: ellipsis;
-}
-
-
-/* === Backgrounds page =====================================================
-   One card per background. The card that is in use is the card that opens: the
-   page has no second "selected for editing" state, so what you are changing is
-   always what the page behind you is wearing.
-   ========================================================================= */
-
-.bg-back {
-  margin-bottom: 12px;
-  padding: 0;
-  border: none;
-  background: none;
-  color: var(--color-primary);
-  font-size: 0.85rem;
-  font-weight: 600;
-  cursor: pointer;
-}
-.bg-intro {
-  margin: 0 0 18px;
-}
-.bg-error {
-  margin: 0 0 16px;
-  padding: 10px 14px;
-  border: 1px solid var(--color-danger, #c0605f);
-  border-radius: var(--radius-btn);
-  color: var(--color-danger, #c0605f);
-  font-size: 0.82rem;
-}
-.bg-list {
-  display: flex;
-  flex-direction: column;
-  gap: 12px;
-  margin-bottom: 20px;
-}
-.bg-card {
-  background: var(--color-bg-card);
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-box);
-  box-shadow: var(--shadow-sm);
-  overflow: hidden;
-}
-.bg-card--active {
-  border-color: var(--color-primary);
-}
-.bg-card__pick {
-  display: flex;
-  align-items: center;
-  gap: 14px;
-  width: 100%;
-  padding: 12px 16px;
-  border: none;
-  background: none;
-  color: inherit;
-  text-align: left;
-  cursor: pointer;
-}
-.bg-card__pick:hover {
-  background: var(--color-bg-subtle);
-}
-/* The preview is the page's own mask at a third scale, tinted with the text
-   colour the way the layer is — not a screenshot, the same tile. */
-.bg-card__preview {
-  flex: 0 0 auto;
-  width: 84px;
-  height: 56px;
-  border-radius: var(--radius-btn);
-  background-color: var(--color-text);
-  opacity: 0.5;
-  -webkit-mask-repeat: repeat;
-  mask-repeat: repeat;
-}
-.bg-card__preview--empty {
-  background-color: var(--color-bg-subtle);
-  border: 1px dashed var(--color-border);
-  opacity: 1;
-}
-.bg-card__head {
-  display: flex;
-  flex-direction: column;
-  gap: 3px;
-  flex: 1 1 auto;
-  min-width: 0;
-}
-/* The card is a button, and the app's buttons are uppercase tracked labels —
-   but a background's own name and file count are content, so they step back out
-   of the button treatment. The USE / IN USE word stays in it. */
-.bg-card__name {
-  font-weight: 600;
-  font-size: 0.92rem;
-  letter-spacing: -0.01em;
-  text-transform: none;
-  color: var(--color-text);
-  overflow: hidden;
-  text-overflow: ellipsis;
-  white-space: nowrap;
-}
-.bg-card__meta {
-  display: flex;
-  align-items: center;
-  gap: 8px;
-  font-size: 0.78rem;
-  font-weight: 400;
-  letter-spacing: 0;
-  text-transform: none;
-  color: var(--color-text-muted);
-}
-.bg-card__tag {
-  padding: 1px 7px;
-  border-radius: var(--radius-pill);
-  background: var(--color-bg-subtle);
-  border: 1px solid var(--color-border);
-  font-size: 0.68rem;
-  letter-spacing: 0.06em;
-  text-transform: uppercase;
-}
-.bg-card__state {
-  flex: 0 0 auto;
-  font-size: 0.78rem;
-  font-weight: 600;
-  color: var(--color-text-muted);
-}
-.bg-card--active .bg-card__state {
-  color: var(--color-primary);
-}
-.bg-card__editor {
-  display: flex;
-  flex-direction: column;
-  gap: 16px;
-  padding: 16px;
-  border-top: 1px solid var(--color-border);
-  background: var(--color-bg-subtle);
-}
-.bg-field {
-  display: flex;
-  flex-direction: column;
-  gap: 8px;
-  min-width: 0;
-}
-.bg-field__label {
-  font-weight: 600;
-  font-size: 0.82rem;
-  color: var(--color-text);
-}
-.bg-field__hint {
-  font-size: 0.76rem;
-  line-height: 1.4;
-  color: var(--color-text-muted);
-}
-.bg-field__row {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 8px;
-}
-.bg-field__input {
-  width: 100%;
-  max-width: 320px;
-  background-image: none;
-}
-.bg-files {
-  display: flex;
-  flex-wrap: wrap;
-  gap: 6px;
-  margin: 0;
-  padding: 0;
-  list-style: none;
-}
-.bg-files__item {
-  padding: 3px 9px;
-  border: 1px solid var(--color-border);
-  border-radius: var(--radius-pill);
-  background: var(--color-bg);
-  font-family: var(--font-mono);
-  font-size: 0.72rem;
-  color: var(--color-text-secondary);
-}
-.bg-delete:hover:not(:disabled) {
-  border-color: var(--color-danger, #c0605f);
-  background: transparent;
-  color: var(--color-danger, #c0605f);
-}
-.bg-create {
-  display: flex;
-  align-items: center;
-  flex-wrap: wrap;
-  gap: 10px 14px;
-}
-.bg-create .settings-row__hint {
-  flex: 1 1 220px;
-}
-
-html.mobile .bg-card__pick {
-  flex-wrap: wrap;
-}
-html.mobile .bg-card__preview {
-  width: 64px;
-  height: 44px;
-}
-
 /* Mobile sets buttons at 1rem, so the same labels need a wider track. */
 html.mobile .player-controls,
 html.mobile .player-nav {
@@ -1536,6 +1588,16 @@ html.mobile .settings-reset {
   height: 42px;
   min-height: 42px;
   padding: 0;
+}
+html.mobile .bg-picker__swatch,
+html.mobile .bg-picker__custom,
+html.mobile .cp-tab,
+html.mobile .cp-slot {
+  min-height: 0;
+  padding: 0;
+}
+html.mobile .cp-apply {
+  padding: 8px 10px;
 }
 html.mobile .subtitle-content {
   font-size: 1rem;

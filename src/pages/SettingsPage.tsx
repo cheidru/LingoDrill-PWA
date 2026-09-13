@@ -10,8 +10,8 @@
 // The preference state stays here, shared by all three, because it is a handful
 // of useStates and splitting it per section would only duplicate the plumbing.
 
-import { useEffect, useState } from "react"
-import { Navigate, useNavigate, useParams } from "react-router-dom"
+import { useState } from "react"
+import { Navigate, useParams } from "react-router-dom"
 import {
   getStartPage,
   setStartPage,
@@ -30,12 +30,13 @@ import {
   setColorTheme,
   isSettingsSection,
   DEFAULT_SETTINGS_SECTION,
-  getBgPattern,
-  getBgTint,
-  setBgTint,
-  BG_PATTERN_NONE,
-  DEFAULT_BG_TINT,
-  DEFAULT_TINT_COLOR,
+  getBgColor,
+  setBgColor,
+  getBgUserColors,
+  setBgUserColor,
+  normalizeBgColor,
+  BG_PALETTES,
+  DEFAULT_BG_COLOR,
   SUB_FONT_SIZE_MIN,
   SUB_FONT_SIZE_MAX,
   FRAGMENT_GAP_MIN,
@@ -47,10 +48,35 @@ import {
   type Language,
   type Theme,
   type ColorTheme,
-  type BgTint,
+  type BgColor,
 } from "../utils/settings"
-import { IndexedDBBackgroundStorage } from "../infrastructure/indexeddb/IndexedDBBackgroundStorage"
 import { useT } from "../utils/i18n"
+import { HEX_COLOR } from "../utils/color"
+import { ColorPickerDialog } from "../app/components/ColorPickerDialog"
+
+/* The base theme's page colour, used when the live CSS token is not a plain hex. */
+const THEME_PAGE_COLOR: Record<Theme, string> = { light: "#faf8ff", dark: "#0f172a" }
+
+const PlusIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+)
+
+const CheckIcon = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="3" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M5 12.5l4.5 4.5L19 7" />
+  </svg>
+)
+
+const PaletteIcon = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path
+      fillRule="evenodd"
+      d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+    />
+  </svg>
+)
 
 /* Arrow curling back on itself — "put this back the way it was". */
 const ResetIcon = () => (
@@ -72,7 +98,6 @@ const ResetIcon = () => (
 
 export function SettingsPage() {
   const t = useT()
-  const navigate = useNavigate()
   const { section } = useParams()
   const [language, setLanguageState] = useState<Language>(getLanguage())
   const [startPage, setStartPageState] = useState<StartPage>(getStartPage())
@@ -81,13 +106,15 @@ export function SettingsPage() {
   const [trimSilenceGap, setTrimSilenceGapState] = useState<number>(getTrimSilenceGap())
   const [themeMode, setThemeModeState] = useState<Theme>(getTheme())
   const [colorTheme, setColorThemeState] = useState<ColorTheme>(getColorTheme())
-  const [bgTint, setBgTintState] = useState<BgTint>(getBgTint())
-  /* Which background is selected is a setting; what it is *called* is not — the
-     name lives with the background in IndexedDB, so the row reads it once and
-     says "none" until it arrives. The id is read at mount because that is when
-     it can change: choosing a background remounts this page on the way back. */
-  const [bgPatternId] = useState<string>(getBgPattern)
-  const [bgPatternName, setBgPatternName] = useState<string | null>(null)
+  const [bgColors, setBgColorsState] = useState<Record<Theme, BgColor>>(() => ({
+    light: getBgColor("light"),
+    dark: getBgColor("dark"),
+  }))
+  const [bgUserColors, setBgUserColorsState] = useState<Record<Theme, (string | null)[]>>(() => ({
+    light: getBgUserColors("light"),
+    dark: getBgUserColors("dark"),
+  }))
+  const [pickerOpen, setPickerOpen] = useState(false)
 
   /* setLanguage fires lingodrill:languagechange, which is what re-renders every
      useT consumer — including this page, so the labels switch under the cursor
@@ -120,22 +147,31 @@ export function SettingsPage() {
     setColorThemeState(v)
     setColorTheme(v)
   }
-  const onBgTintChange = (v: BgTint) => {
-    setBgTintState(v)
-    setBgTint(v)
+  const onBgColorChange = (theme: Theme, v: BgColor) => {
+    setBgColor(theme, v)
+    setBgColorsState(prev => ({ ...prev, [theme]: getBgColor(theme) }))
+  }
+  const onSaveUserColor = (theme: Theme, index: number, hex: string) => {
+    setBgUserColor(theme, index, hex)
+    setBgUserColorsState(prev => ({ ...prev, [theme]: getBgUserColors(theme) }))
   }
 
-  useEffect(() => {
-    if (section !== "appearance" || bgPatternId === BG_PATTERN_NONE) return
-    let cancelled = false
-    void new IndexedDBBackgroundStorage().get(bgPatternId).then(bg => {
-      if (!cancelled) setBgPatternName(bg?.name ?? null)
-    })
-    return () => { cancelled = true }
-  }, [section, bgPatternId])
+  /* The theme's own ground when nothing is chosen, read off the live CSS so
+     colour themes (pastel, neon) show their own. */
+  const themeGround = (): string => {
+    const live = getComputedStyle(document.documentElement).getPropertyValue("--color-bg-page").trim()
+    return HEX_COLOR.test(live) ? live : THEME_PAGE_COLOR[themeMode]
+  }
 
   const trimGapIsDefault = trimSilenceGap === DEFAULT_TRIM_SILENCE_GAP
-  const tintIsDefault = bgTint === DEFAULT_BG_TINT
+  /* Only the active theme's row is live: the sample, the reset and the
+     palette button all act on it. */
+  const targetColor = bgColors[themeMode]
+  const targetIsDefault = targetColor === DEFAULT_BG_COLOR
+  const targetIsCustom = !targetIsDefault
+    && !BG_PALETTES[themeMode].includes(targetColor)
+    && !bgUserColors[themeMode].includes(targetColor)
+  const sampleColor = targetIsDefault ? themeGround() : targetColor
 
   /* A stale bookmark or a typed URL must not land on a blank page: anything
      that is not one of the three sections is sent to the first one. */
@@ -252,65 +288,114 @@ export function SettingsPage() {
               </div>
             </div>
 
-            <div className="settings-row">
+            <div className="settings-row settings-row--stacked">
               <div className="settings-row__text">
-                <span className="settings-row__label">{t("settings.bgTint")}</span>
-                <span className="settings-row__hint">{t("settings.bgTint.hint")}</span>
+                <span className="settings-row__label">{t("settings.bgColor")}</span>
+                <span className="settings-row__hint">{t("settings.bgColor.hint")}</span>
               </div>
-              <div className="settings-row__control settings-slider-row">
-                {/* The colour input is hidden the way the radios elsewhere are —
-                    the chip is the control, and clicking it opens the platform
-                    picker. The dot shows the ground the pick actually produced
-                    once normalised, which is rarely the raw colour chosen. */}
-                <label className={`settings-swatch${tintIsDefault ? "" : " settings-swatch--active"}`}>
-                  <input
-                    type="color"
-                    value={tintIsDefault ? DEFAULT_TINT_COLOR : bgTint}
-                    onChange={e => onBgTintChange(e.target.value)}
-                  />
-                  <span
-                    className={`settings-swatch__dot settings-swatch__dot--tint-${tintIsDefault ? "pick" : "custom"}`}
-                  />
-                  {t("settings.bgTint.custom")}
-                </label>
-                {/* Going back to the theme's own colour is an undo, not a third
-                    colour to choose between — so it is the same reset icon the
-                    sliders use, disabled while there is nothing to undo. */}
-                <button
-                  type="button"
-                  className="settings-reset"
-                  onClick={() => onBgTintChange(DEFAULT_BG_TINT)}
-                  disabled={tintIsDefault}
-                  title={t("settings.bgTint.default")}
-                  aria-label={t("settings.bgTint.default")}
-                >
-                  <ResetIcon />
-                </button>
+              <div className="bg-picker">
+                <div className={`bg-picker__sample bg-picker__sample--${themeMode}`} style={{ backgroundColor: sampleColor }}>
+                  <span className="bg-picker__sample-label">{t(`settings.bgColor.${themeMode}`)}</span>
+                  {/* Going back to the theme's own colour is an undo, not another
+                      colour to choose between — so it is the same reset icon the
+                      sliders use, disabled while there is nothing to undo. */}
+                  <button
+                    type="button"
+                    className="settings-reset"
+                    onClick={() => onBgColorChange(themeMode, DEFAULT_BG_COLOR)}
+                    disabled={targetIsDefault}
+                    title={t("settings.bgColor.default")}
+                    aria-label={t("settings.bgColor.default")}
+                  >
+                    <ResetIcon />
+                  </button>
+                </div>
+                <div className="bg-picker__body">
+                  <div className="bg-picker__rows">
+                    {/* A row belongs to its theme and is disabled while the other
+                        theme is active — a dark colour picked under the light
+                        theme would change nothing the user can see. */}
+                    {(["light", "dark"] as Theme[]).map(theme => {
+                      const disabled = theme !== themeMode
+                      return (
+                        <div
+                          key={theme}
+                          className={`bg-picker__row bg-picker__row--${theme}`}
+                          role="radiogroup"
+                          aria-label={t(`settings.bgColor.${theme}`)}
+                          aria-disabled={disabled}
+                        >
+                          {BG_PALETTES[theme].map(color => {
+                            const checked = bgColors[theme] === color
+                            return (
+                              <button
+                                key={color}
+                                type="button"
+                                role="radio"
+                                aria-checked={checked}
+                                aria-label={color}
+                                disabled={disabled}
+                                className={`bg-picker__swatch${checked ? " bg-picker__swatch--checked" : ""}`}
+                                style={{ backgroundColor: color }}
+                                onClick={() => onBgColorChange(theme, color)}
+                              >
+                                {checked && <CheckIcon />}
+                              </button>
+                            )
+                          })}
+                          {/* The user's own slots. An empty one has nothing to
+                              select, so it opens the picker to fill it. */}
+                          {bgUserColors[theme].map((color, i) => {
+                            const checked = color !== null && bgColors[theme] === color
+                            const label = color
+                              ? `${t("settings.bgColor.userSlot")} ${i + 1}: ${color}`
+                              : `${t("settings.bgColor.userSlot")} ${i + 1}: ${t("settings.bgColor.emptySlot")}`
+                            return (
+                              <button
+                                key={`user-${i}`}
+                                type="button"
+                                role="radio"
+                                aria-checked={checked}
+                                aria-label={label}
+                                title={label}
+                                disabled={disabled}
+                                className={`bg-picker__swatch bg-picker__swatch--user${color ? "" : " bg-picker__swatch--empty"}${checked ? " bg-picker__swatch--checked" : ""}`}
+                                style={color ? { backgroundColor: color } : undefined}
+                                onClick={() => (color ? onBgColorChange(theme, color) : setPickerOpen(true))}
+                              >
+                                {checked && <CheckIcon />}
+                                {!color && <PlusIcon />}
+                              </button>
+                            )
+                          })}
+                        </div>
+                      )
+                    })}
+                  </div>
+                  <button
+                    type="button"
+                    className={`bg-picker__custom${targetIsCustom ? " bg-picker__custom--active" : ""}`}
+                    onClick={() => setPickerOpen(true)}
+                    title={t("settings.bgColor.custom")}
+                    aria-label={t("settings.bgColor.custom")}
+                  >
+                    <PaletteIcon />
+                  </button>
+                </div>
               </div>
-            </div>
-  
-            <div className="settings-row">
-              <div className="settings-row__text">
-                <span className="settings-row__label">{t("settings.bgPattern")}</span>
-                <span className="settings-row__hint">{t("settings.bgPattern.hint")}</span>
-              </div>
-              {/* Which backgrounds exist is the user's business now, so this row
-                  no longer lists them — it says which one is on and opens the
-                  page where they are made, chosen and thrown away. */}
-              <div className="settings-row__control settings-slider-row">
-                <span className="settings-value settings-value--wide">
-                  {bgPatternId !== BG_PATTERN_NONE && bgPatternName
-                    ? t("settings.bgPattern.current", { name: bgPatternName })
-                    : t("settings.bgPattern.none")}
-                </span>
-                <button
-                  type="button"
-                  className="settings-seg__btn settings-seg__btn--standalone"
-                  onClick={() => navigate("/settings/appearance/backgrounds")}
-                >
-                  {t("settings.bgPattern.select")}
-                </button>
-              </div>
+              {pickerOpen && (
+                <ColorPickerDialog
+                  initial={sampleColor}
+                  preview={hex => normalizeBgColor(hex, themeMode)}
+                  userColors={bgUserColors[themeMode]}
+                  onSaveUserColor={(i, hex) => onSaveUserColor(themeMode, i, hex)}
+                  onApply={hex => {
+                    onBgColorChange(themeMode, hex)
+                    setPickerOpen(false)
+                  }}
+                  onClose={() => setPickerOpen(false)}
+                />
+              )}
             </div>
 
             <div className="settings-row settings-row--stacked">

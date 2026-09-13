@@ -10,9 +10,7 @@ import { SequencePlayerPage } from "../pages/SequencePlayerPage"
 import { FavouritesPage } from "../pages/FavouritesPage"
 import { SettingsPage } from "../pages/SettingsPage"
 import { ContactsPage } from "../pages/ContactsPage"
-import { BackgroundsPage } from "../pages/BackgroundsPage"
-import { getStartPage, getLastSequence, applySubFontSize, applyTheme, applyColorTheme, applyBgTint, applyLanguage, DEFAULT_SETTINGS_SECTION } from "../utils/settings"
-import { applyBgPatternFromCache, refreshBgPattern } from "../utils/backgroundRuntime"
+import { getStartPage, getLastSequence, applySubFontSize, applyTheme, applyColorTheme, applyBgColors, applyLanguage, clearRetiredBgSettings, DEFAULT_SETTINGS_SECTION } from "../utils/settings"
 import "./App.css"
 import "./bundle.css"
 import "./sequencePlayer.css"
@@ -22,12 +20,8 @@ import "./help.css"
 applySubFontSize()
 applyTheme()
 applyColorTheme()
-/* The cached tile goes up before the first paint; the background it was built
-   from lives in IndexedDB, so it is re-read afterwards and the layer corrected
-   if it has changed or gone. */
-applyBgPatternFromCache()
-void refreshBgPattern()
-applyBgTint()
+clearRetiredBgSettings()
+applyBgColors()
 applyLanguage()
 
 const SESSION_REDIRECT_KEY = "lingodrill.startPageRedirected"
@@ -62,9 +56,6 @@ export default function App() {
               list of them, so the bare path only stands in for the first. */}
           <Route path="/settings" element={<Navigate to={`/settings/${DEFAULT_SETTINGS_SECTION}`} replace />} />
           <Route path="/settings/:section" element={<SettingsPage />} />
-          {/* Not a Settings section — Appearance sends you here, and the
-              header menu stays the three sections it has always been. */}
-          <Route path="/settings/appearance/backgrounds" element={<BackgroundsPage />} />
           <Route path="/contacts" element={<ContactsPage />} />
         </Routes>
       </AudioEngineProvider>

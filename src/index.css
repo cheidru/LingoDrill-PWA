@@ -42,14 +42,9 @@
   /* Glow — primary halo used by Studio Dark; transparent elsewhere by default */
   --glow-primary: 0 0 0 transparent;
 
-  /* Background — ground colour, ground image and pattern layer
-     (see the end of this file) */
-  --bg-tint: var(--color-bg-page);
-  --bg-tint-strength: 14%;
-  --bg-ground-color: color-mix(in srgb, var(--bg-tint) var(--bg-tint-strength), var(--color-bg-page));
+  /* Background — ground colour and ground image (see the end of this file) */
+  --bg-ground-color: var(--bg-light, var(--color-bg-page));
   --bg-ground-image: none;
-  --bg-pattern-opacity: 0.14;
-  --bg-pattern-size: 72px;
 
   /* Radii */
   --radius-sm: 8px;
@@ -401,68 +396,12 @@ html.mobile button {
 }
 
 
-/* === Background pattern ===================================================
-   A background is one black SVG tile. It is applied as a mask and tinted with
-   `--bg-pattern-color` — the colour chosen for that background, defaulting to
-   the theme's own `--color-text` — so a single tile serves all six theme x
-   colour-theme combinations instead of needing a recoloured copy of each.
-
-   Where the layer sits matters: `html::before` at `z-index: -1` paints after
-   the ground (html's own background) and before every in-flow background —
-   and since cards, rows, modals and the waveform panel are all opaque, the
-   pattern can only ever show in the margins around them. That is also why
-   nothing else may paint an opaque background on `html` or `body`.
-
-   Nothing is hard-coded here any more. The tile is built at runtime from the
-   selected background's own SVG drawings and written to `--bg-pattern` (plus
-   `--bg-pattern-size`, which must stay the tile's real pixel size or the
-   drawings stop being 40px tall) by utils/backgroundRuntime.ts. Its only job
-   here is to be shown at all, which is what `data-bg-pattern="custom"` does.
-   ========================================================================= */
-
-html::before {
-  content: "";
-  display: none;
-  position: fixed;
-  inset: 0;
-  z-index: -1;
-  pointer-events: none;
-  background-color: var(--bg-pattern-color, var(--color-text));
-  opacity: var(--bg-pattern-opacity);
-  -webkit-mask-image: var(--bg-pattern);
-  mask-image: var(--bg-pattern);
-  -webkit-mask-size: var(--bg-pattern-size);
-  mask-size: var(--bg-pattern-size);
-  -webkit-mask-repeat: repeat;
-  mask-repeat: repeat;
-}
-
-html[data-bg-pattern="custom"]::before {
-  display: block;
-}
-
-/* Light ink on a dark ground reads stronger at the same alpha, so dark sits a
-   little under light to land at the same apparent weight. */
-html[data-theme="dark"] {
-  --bg-pattern-opacity: 0.12;
-}
-
-
 /* === Background colour ====================================================
-   The colour the user picked in Settings, mixed into the theme's own page
-   colour rather than replacing it. One hex then works in light and dark alike:
-   the same green over a near-white ground reads as pale sage, and over a near-
-   black one as a deep forest, and every colour theme keeps its own character.
-
-   There is no rule for it here: `applyBgTint` sets `--bg-tint` on <html>
-   itself, since the value is a free colour rather than one of a fixed set.
-   Without it the `:root` default below stands and the ground is the theme's.
+   Each theme has its own colour, picked in Settings (top row light, bottom row
+   dark). `applyBgColors` sets `--bg-light` / `--bg-dark` on <html>; whichever
+   matches the active theme becomes the ground, so switching theme needs no
+   script. An unset one falls back to the theme's own page colour.
    ========================================================================= */
-
-/* A dark ground swallows a hue the way it swallows the pattern tint, so the
-   same colours are mixed in a little harder there. Not much harder, though:
-   the cards keep their own slate, and a strong hue behind them reads as two
-   designs fighting rather than one tinted room. */
 html[data-theme="dark"] {
-  --bg-tint-strength: 16%;
+  --bg-ground-color: var(--bg-dark, var(--color-bg-page));
 }

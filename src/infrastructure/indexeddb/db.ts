@@ -2,7 +2,7 @@
 
 import { openDB } from "idb"
 
-export const dbPromise = openDB("language-trainer", 8, {
+export const dbPromise = openDB("language-trainer", 9, {
   upgrade(db, oldVersion) {
     if (oldVersion < 1) {
       db.createObjectStore("audioMeta", { keyPath: "id" })
@@ -43,6 +43,14 @@ export const dbPromise = openDB("language-trainer", 8, {
     if (oldVersion < 8) {
       if (!db.objectStoreNames.contains("backgrounds")) {
         db.createObjectStore("backgrounds", { keyPath: "id" })
+      }
+    }
+    /* v9: the background pattern is gone, so its store goes too — the same
+       reasoning as renderedSequenceCache in v7. v8 still creates it on the way
+       through, which keeps the version history honest. */
+    if (oldVersion < 9) {
+      if (db.objectStoreNames.contains("backgrounds")) {
+        db.deleteObjectStore("backgrounds")
       }
     }
   },
