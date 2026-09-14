@@ -93,6 +93,32 @@ const RewindCountIcon = () => (
   </svg>
 )
 
+// Focus loop icon: brackets around a filled span.
+const FocusIcon = () => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 4H4v16h3" /><path d="M17 4h3v16h-3" />
+    <rect x="9" y="10" width="6" height="4" fill="currentColor" stroke="none" />
+  </svg>
+)
+
+/* A temporary sub-range of a fragment. Session-only, never saved. While the
+   fragment's Focus button is on it replaces the fragment's bounds everywhere,
+   Play all included; switched off, the range is kept but not played. */
+type FocusRange = { start: number; end: number }
+const FOCUS_MIN = 0.3
+
+/** Orders a/b, keeps them inside the fragment and at least FOCUS_MIN apart. */
+function normalizeFocus(a: number, b: number, fragStart: number, fragEnd: number): FocusRange {
+  const clamp = (v: number) => Math.min(fragEnd, Math.max(fragStart, v))
+  let start = clamp(Math.min(a, b))
+  let end = clamp(Math.max(a, b))
+  if (end - start < FOCUS_MIN) {
+    end = Math.min(fragEnd, start + FOCUS_MIN)
+    start = Math.max(fragStart, end - FOCUS_MIN)
+  }
+  return { start, end }
+}
+
 /** First fragment that is not switched off, or null when every one is. */
 function findFirstEnabled(seq: Sequence, disabled: Record<number, boolean>): number | null {
   for (let i = 0; i < seq.fragments.length; i++) {
@@ -168,6 +194,93 @@ function VocabularyDisplay({
   )
 }
 
+// --- Focus strip: pick a temporary A–B range inside the fragment ---
+function FocusStrip({
+  fragStart,
+  fragEnd,
+  range,
+  currentTime,
+  showCursor,
+  onChange,
+  onRestart,
+}: {
+  fragStart: number
+  fragEnd: number
+  range: FocusRange | null
+  currentTime: number
+  /** This fragment is the one playing or paused, so the playhead means something. */
+  showCursor: boolean
+  /** restart: replay the focus now if this fragment is playing. */
+  onChange: (range: FocusRange | null, restart: boolean) => void
+  onRestart: () => void
+}) {
+  const t = useT()
+  const start = range?.start ?? fragStart
+  const end = range?.end ?? fragEnd
+  const span = Math.max(0.001, fragEnd - fragStart)
+  const now = Math.min(fragEnd, Math.max(fragStart, currentTime))
+
+  const set = (a: number, b: number) =>
+    onChange(normalizeFocus(a, b, fragStart, fragEnd), false)
+
+  return (
+    <div className="sp-focus-strip">
+      <div className="sp-focus-strip__head">
+        <span className="sp-focus-strip__title">{t("player.focus.title")}</span>
+        <span className="sp-focus-strip__readout">
+          {range
+            ? `${formatTime(start)} – ${formatTime(end)} · ${(end - start).toFixed(1)}s`
+            : t("player.focus.none")}
+        </span>
+        {range && (
+          <button
+            className="sp-ctrl-btn sp-focus-strip__clear"
+            onClick={() => onChange(null, true)}
+            title={t("player.focus.clear")}
+          >
+            <CloseIcon />
+          </button>
+        )}
+      </div>
+
+      <div className="sp-focus-range">
+        <div className="sp-focus-range__track" />
+        <div
+          className="sp-focus-range__fill"
+          style={{ left: `${((start - fragStart) / span) * 100}%`, width: `${((end - start) / span) * 100}%` }}
+        />
+        {showCursor && (
+          <div className="sp-focus-range__cursor" style={{ left: `${((now - fragStart) / span) * 100}%` }} />
+        )}
+        <input
+          type="range"
+          className="sp-focus-range__input"
+          min={fragStart}
+          max={fragEnd}
+          step={0.05}
+          value={start}
+          onChange={e => set(Math.min(parseFloat(e.target.value), end - FOCUS_MIN), end)}
+          onPointerUp={onRestart}
+          onKeyUp={onRestart}
+          aria-label={t("player.focus.startLabel")}
+        />
+        <input
+          type="range"
+          className="sp-focus-range__input"
+          min={fragStart}
+          max={fragEnd}
+          step={0.05}
+          value={end}
+          onChange={e => set(start, Math.max(parseFloat(e.target.value), start + FOCUS_MIN))}
+          onPointerUp={onRestart}
+          onKeyUp={onRestart}
+          aria-label={t("player.focus.endLabel")}
+        />
+      </div>
+    </div>
+  )
+}
+
 // --- Fragment control panel ---
 function FragmentControlPanel({
   fragmentIndex,
@@ -189,7 +302,25 @@ function FragmentControlPanel({
   onEdit,
   onRepeatChange,
   onFragmentSpeedChange,
+  fragStart,
+  fragEnd,
+  focusRange,
+  currentTime,
+  isCurrentFragment,
+  isFocusOn,
+  onFocusToggle,
+  onFocusChange,
+  onFocusRestart,
 }: {
+  fragStart: number
+  fragEnd: number
+  focusRange: FocusRange | null
+  currentTime: number
+  isCurrentFragment: boolean
+  isFocusOn: boolean
+  onFocusToggle: () => void
+  onFocusChange: (range: FocusRange | null, restart: boolean) => void
+  onFocusRestart: () => void
   fragmentIndex: number
   totalFragments: number
   isPlaying: boolean
@@ -216,6 +347,17 @@ function FragmentControlPanel({
   const isMobile = document.documentElement.classList.contains("mobile")
   return (
     <div className="sp-control-panel">
+      {isFocusOn && (
+        <FocusStrip
+          fragStart={fragStart}
+          fragEnd={fragEnd}
+          range={focusRange}
+          currentTime={currentTime}
+          showCursor={isCurrentFragment}
+          onChange={onFocusChange}
+          onRestart={onFocusRestart}
+        />
+      )}
       <div className="sp-control-row">
         {/* Play / Pause */}
         {isPlaying ? (
@@ -262,6 +404,16 @@ function FragmentControlPanel({
           title={isInfiniteRewind ? t("player.ctrl.infiniteOn") : t("player.ctrl.infiniteOff")}
         >
           <InfiniteRewindIcon />
+        </button>
+
+        {/* Focus loop — on: plays the slider's range and shows the slider; off: range kept, not played */}
+        <button
+          className={`sp-ctrl-btn ${isFocusOn ? "sp-ctrl-btn--active" : ""}`}
+          onClick={onFocusToggle}
+          aria-pressed={isFocusOn}
+          title={isFocusOn ? t("player.ctrl.focusOn") : t("player.ctrl.focusOff")}
+        >
+          <FocusIcon />
         </button>
 
         {/* Speed (controls this fragment's playback speed; saved per fragment) */}
@@ -411,7 +563,7 @@ function SequencePlayerPageInner() {
   const {
     files,
     loadById, playFragment, pause, play, stop,
-    isPlaying, isPaused, setOnEnded,
+    isPlaying, isPaused, setOnEnded, currentTime,
     volume, setVolume,
   } = useSharedAudioEngine()
 
@@ -445,6 +597,10 @@ function SequencePlayerPageInner() {
 
   // Local fragment overrides (repeat) — keyed by fragment index
   const [localRepeats, setLocalRepeats] = useState<Record<number, number>>({})
+  // Temporary focus ranges (A–B loop inside a fragment) — keyed by fragment index, never persisted
+  const [localRanges, setLocalRanges] = useState<Record<number, FocusRange>>({})
+  // Fragments whose Focus button is on — only these play their range
+  const [focusOn, setFocusOn] = useState<Record<number, boolean>>({})
   // Disabled fragments — excluded from Play-all
   const [disabledFragments, setDisabledFragments] = useState<Record<number, boolean>>({})
 
@@ -456,6 +612,9 @@ function SequencePlayerPageInner() {
   const sequenceRef = useRef<Sequence | null>(null)
   const sequenceSpeedRef = useRef(1)
   const localRepeatsRef = useRef<Record<number, number>>({})
+  // Written synchronously by handleFocusChange so a restart sees the new range
+  const localRangesRef = useRef<Record<number, FocusRange>>({})
+  const focusOnRef = useRef<Record<number, boolean>>({})
   const disabledFragmentsRef = useRef<Record<number, boolean>>({})
   const gapTimerRef = useRef<ReturnType<typeof setTimeout> | null>(null)
 
@@ -538,6 +697,20 @@ function SequencePlayerPageInner() {
     return f.speed
   }, [])
 
+  /* The one place a fragment becomes something the engine plays. While the
+     fragment's Focus is on, start/end narrow to its focus range — in every
+     mode, Play all included. */
+  const buildPlayable = useCallback((f: SequenceFragment, fragIdx: number): PlayableFragment => {
+    const focus = focusOnRef.current[fragIdx] ? localRangesRef.current[fragIdx] : undefined
+    return {
+      start: focus?.start ?? f.start,
+      end: focus?.end ?? f.end,
+      repeat: localRepeatsRef.current[fragIdx] ?? f.repeat,
+      speed: getEffectiveSpeed(f),
+      gap: getFragmentGap(),
+    }
+  }, [getEffectiveSpeed])
+
   // --- Play a single fragment with local overrides ---
   const playFragmentWithOverrides = useCallback((seq: Sequence, fragIdx: number) => {
     if (fragIdx < 0 || fragIdx >= seq.fragments.length) {
@@ -545,14 +718,11 @@ function SequencePlayerPageInner() {
       return
     }
     clearGapTimer()
-    const f = seq.fragments[fragIdx]
-    const repeat = localRepeatsRef.current[fragIdx] ?? f.repeat
-    const speed = getEffectiveSpeed(f)
-    const fragment: PlayableFragment = { start: f.start, end: f.end, repeat, speed, gap: getFragmentGap() }
-    console.log("[SequencePlayerPage] Playing fragment", fragIdx, "start:", f.start.toFixed(2), "end:", f.end.toFixed(2), "repeat:", repeat, "speed:", speed)
+    const fragment = buildPlayable(seq.fragments[fragIdx], fragIdx)
+    console.log("[SequencePlayerPage] Playing fragment", fragIdx, "start:", fragment.start.toFixed(2), "end:", fragment.end.toFixed(2), "repeat:", fragment.repeat, "speed:", fragment.speed)
     playFragment(fragment)
     setPlayingFragIdx(fragIdx)
-  }, [playFragment, getEffectiveSpeed, clearGapTimer])
+  }, [playFragment, buildPlayable, clearGapTimer])
 
   // --- Play all (skips disabled fragments) ---
   const handlePlayAll = useCallback(() => {
@@ -599,10 +769,7 @@ function SequencePlayerPageInner() {
       // Infinite rewind: replay same fragment after the configured gap
       if (infiniteRewindRef.current) {
         console.log("[SequencePlayerPage] Infinite rewind: replaying fragment", currentIdx)
-        const f = seq.fragments[currentIdx]
-        const repeat = localRepeatsRef.current[currentIdx] ?? f.repeat
-        const speed = f.speed
-        const fragment: PlayableFragment = { start: f.start, end: f.end, repeat, speed, gap: getFragmentGap() }
+        const fragment = buildPlayable(seq.fragments[currentIdx], currentIdx)
         scheduleAfterGap(() => {
           if (playingFragIdxRef.current !== currentIdx) return
           if (!infiniteRewindRef.current) return
@@ -638,10 +805,7 @@ function SequencePlayerPageInner() {
           nextIdx = firstIdx
         }
         console.log("[SequencePlayerPage] Play-all advancing to fragment", nextIdx)
-        const f = seq.fragments[nextIdx]
-        const repeat = localRepeatsRef.current[nextIdx] ?? f.repeat
-        const speed = f.speed
-        const fragment: PlayableFragment = { start: f.start, end: f.end, repeat, speed, gap: getFragmentGap() }
+        const fragment = buildPlayable(seq.fragments[nextIdx], nextIdx)
         scheduleAfterGap(() => {
           if (!playAllModeRef.current) return
           playFragment(fragment)
@@ -660,7 +824,7 @@ function SequencePlayerPageInner() {
       setOnEnded(null)
       clearGapTimer()
     }
-  }, [setOnEnded, playFragment, scheduleAfterGap, clearGapTimer])
+  }, [setOnEnded, playFragment, buildPlayable, scheduleAfterGap, clearGapTimer])
 
   // --- Fragment control panel handlers ---
   const handleFragPlay = useCallback((fragIdx: number) => {
@@ -760,6 +924,34 @@ function SequencePlayerPageInner() {
     updateSequence({ ...sequence, fragments: updatedFragments })
   }, [sequence, updateSequence])
 
+  /* Replays the fragment with its current bounds, but only when it is actually
+     sounding — adjusting while paused or stopped just takes effect on the next
+     play. In Play all the sequence carries on from there as usual. */
+  const restartFocus = useCallback((fragIdx: number) => {
+    const seq = sequenceRef.current
+    if (!seq || !isPlaying || playingFragIdxRef.current !== fragIdx) return
+    playFragmentWithOverrides(seq, fragIdx)
+  }, [isPlaying, playFragmentWithOverrides])
+
+  const handleFocusToggle = useCallback((fragIdx: number) => {
+    const next = { ...focusOnRef.current }
+    if (next[fragIdx]) delete next[fragIdx]
+    else next[fragIdx] = true
+    focusOnRef.current = next
+    setFocusOn(next)
+    // Only audible when a range differs from the whole fragment
+    if (localRangesRef.current[fragIdx]) restartFocus(fragIdx)
+  }, [restartFocus])
+
+  const handleFocusChange = useCallback((fragIdx: number, range: FocusRange | null, restart: boolean) => {
+    const next = { ...localRangesRef.current }
+    if (range) next[fragIdx] = range
+    else delete next[fragIdx]
+    localRangesRef.current = next
+    setLocalRanges(next)
+    if (restart) restartFocus(fragIdx)
+  }, [restartFocus])
+
   const handleToggleDisabled = useCallback((fragIdx: number) => {
     setDisabledFragments(prev => {
       const next = { ...prev }
@@ -771,6 +963,19 @@ function SequencePlayerPageInner() {
       return next
     })
   }, [])
+
+  /* Top-row switch: excludes every fragment from Play all, or — when they are
+     all excluded already — brings them all back. */
+  const handleToggleAllDisabled = useCallback(() => {
+    if (!sequence || sequence.fragments.length === 0) return
+    setDisabledFragments(prev => {
+      const allOff = sequence.fragments.every((_, i) => prev[i])
+      if (allOff) return {}
+      const next: Record<number, boolean> = {}
+      sequence.fragments.forEach((_, i) => { next[i] = true })
+      return next
+    })
+  }, [sequence])
 
   const handleEditFragment = useCallback((fragIdx: number) => {
     if (!sequence) return
@@ -828,6 +1033,7 @@ function SequencePlayerPageInner() {
   }
 
   const isPlayAllActive = playAllMode && playingFragIdx !== null
+  const allExcluded = sequence.fragments.length > 0 && sequence.fragments.every((_, i) => disabledFragments[i])
 
   return (
     <div className="page">
@@ -872,7 +1078,7 @@ function SequencePlayerPageInner() {
           <button
             className="sp-playall-btn"
             onClick={handlePlayAll}
-            disabled={sequence.fragments.length === 0}
+            disabled={sequence.fragments.length === 0 || allExcluded}
             title={t("player.playAllTitle")}
           >
             <PlayAllIcon size={20} />
@@ -891,6 +1097,16 @@ function SequencePlayerPageInner() {
           title={infiniteSequence ? t("player.repeatOn") : t("player.repeatOff")}
         >
           <InfiniteRewindIcon />
+        </button>
+        {/* Same skip glyph as each fragment's exclude button, applied to all of them */}
+        <button
+          className={`sp-playall-btn sp-loop-btn sp-exclude-all-btn${allExcluded ? " sp-exclude-all-btn--active" : ""}`}
+          onClick={handleToggleAllDisabled}
+          disabled={sequence.fragments.length === 0}
+          aria-pressed={allExcluded}
+          title={allExcluded ? t("player.includeAll") : t("player.excludeAll")}
+        >
+          <SkipIcon />
         </button>
         <label className="sp-global-speed" title={t("player.globalSpeed")}>
           <span className="sp-global-speed__icon"><SpeedIcon /></span>
@@ -916,6 +1132,8 @@ function SequencePlayerPageInner() {
           const isCurrentlyPlaying = playingFragIdx === idx
           const repeat = localRepeats[idx] ?? frag.repeat
           const isFragDisabled = !!disabledFragments[idx]
+          const focus = localRanges[idx] ?? null
+          const isFocusOn = !!focusOn[idx]
 
           return (
             <div key={frag.id} className={`sp-frag-item ${isCurrentlyPlaying ? "sp-frag-item--playing" : ""} ${isSelected ? "sp-frag-item--selected" : ""} ${isFragDisabled ? "sp-frag-item--disabled" : ""}`}>
@@ -936,6 +1154,11 @@ function SequencePlayerPageInner() {
                 )}
                 {frag.speed !== 1 && (
                   <span className="sp-frag-speed">{frag.speed}×</span>
+                )}
+                {isFocusOn && focus && (
+                  <span className="sp-frag-focus" title={t("player.focus.badge")}>
+                    ⟦{(focus.start - frag.start).toFixed(1)}–{(focus.end - frag.start).toFixed(1)}⟧
+                  </span>
                 )}
                 {frag.subtitles.length > 0 && (
                   <span className="sp-frag-sub-indicator" title={t("player.hasSubtitles")}>📝</span>
@@ -978,6 +1201,15 @@ function SequencePlayerPageInner() {
                     onEdit={() => handleEditFragment(idx)}
                     onRepeatChange={(v) => handleRepeatChange(idx, v)}
                     onFragmentSpeedChange={(v) => handleFragmentSpeedChange(idx, v)}
+                    fragStart={frag.start}
+                    fragEnd={frag.end}
+                    focusRange={focus}
+                    currentTime={currentTime}
+                    isCurrentFragment={isCurrentlyPlaying && (isPlaying || isPaused)}
+                    isFocusOn={isFocusOn}
+                    onFocusToggle={() => handleFocusToggle(idx)}
+                    onFocusChange={(r, restart) => handleFocusChange(idx, r, restart)}
+                    onFocusRestart={() => restartFocus(idx)}
                   />
                 </>
               )}

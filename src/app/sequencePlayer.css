@@ -720,6 +720,18 @@ html.mobile .sp-global-speed {
   border-color: var(--color-primary-light);
   color: var(--color-bg-page);
 }
+/* Exclude-all switch: danger-coloured when every fragment is excluded,
+   matching the per-fragment exclude button. */
+.sp-exclude-all-btn--active {
+  background: transparent;
+  border-color: var(--color-danger);
+  color: var(--color-danger);
+}
+.sp-exclude-all-btn--active:hover:not(:disabled) {
+  background: var(--color-danger);
+  border-color: var(--color-danger);
+  color: var(--color-bg-page);
+}
 
 .sp-ctrl-btn--disabled {
   background: transparent;
@@ -788,3 +800,126 @@ html.mobile .sp-global-speed {
   text-shadow: 0 0 12px color-mix(in srgb, var(--color-primary) 40%, transparent);
 }
 
+
+/* --- Focus loop (temporary A–B range inside a fragment) --- */
+.sp-frag-focus {
+  font-family: var(--font-mono);
+  font-size: 0.65rem;
+  letter-spacing: 0.04em;
+  padding: 1px 6px;
+  border: 1px solid color-mix(in srgb, var(--color-success) 50%, transparent);
+  border-radius: var(--radius-sm);
+  color: var(--color-success);
+  white-space: nowrap;
+}
+.sp-focus-strip {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+  padding-bottom: 10px;
+  margin-bottom: 10px;
+  border-bottom: 1px solid var(--color-border);
+}
+.sp-focus-strip__head {
+  display: flex;
+  align-items: center;
+  gap: 8px;
+  min-height: 28px;
+}
+.sp-focus-strip__title {
+  font-family: var(--font-mono);
+  font-size: 0.7rem;
+  letter-spacing: 0.08em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+}
+.sp-focus-strip__readout {
+  font-family: var(--font-mono);
+  font-size: 0.8rem;
+  font-variant-numeric: tabular-nums;
+  color: var(--color-text);
+}
+.sp-focus-strip .sp-focus-strip__clear {
+  margin-left: auto;
+  width: 28px;
+  height: 28px;
+  font-size: 0.9rem;
+}
+
+/* Two stacked range inputs sharing one track; only the thumbs take pointer events. */
+.sp-focus-range {
+  position: relative;
+  height: 32px;
+}
+.sp-focus-range__track,
+.sp-focus-range__fill {
+  position: absolute;
+  top: 50%;
+  height: 6px;
+  transform: translateY(-50%);
+  border-radius: 3px;
+  pointer-events: none;
+}
+.sp-focus-range__track {
+  left: 0;
+  right: 0;
+  background: var(--color-border);
+}
+.sp-focus-range__fill {
+  background: var(--color-primary);
+}
+.sp-focus-range__cursor {
+  position: absolute;
+  top: 4px;
+  bottom: 4px;
+  width: 2px;
+  margin-left: -1px;
+  background: var(--color-warning);
+  pointer-events: none;
+}
+.sp-focus-range__input {
+  position: absolute;
+  inset: 0;
+  width: 100%;
+  height: 100%;
+  margin: 0;
+  background: transparent;
+  pointer-events: none;
+  -webkit-appearance: none;
+  appearance: none;
+}
+.sp-focus-range__input::-webkit-slider-runnable-track {
+  background: transparent;
+  border: none;
+}
+.sp-focus-range__input::-moz-range-track {
+  background: transparent;
+  border: none;
+}
+.sp-focus-range__input::-webkit-slider-thumb {
+  -webkit-appearance: none;
+  pointer-events: auto;
+  width: 18px;
+  height: 22px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  cursor: grab;
+}
+.sp-focus-range__input::-moz-range-thumb {
+  pointer-events: auto;
+  width: 14px;
+  height: 18px;
+  border-radius: var(--radius-sm);
+  background: var(--color-bg);
+  border: 2px solid var(--color-primary);
+  cursor: grab;
+}
+
+html.mobile .sp-focus-range {
+  height: 40px;
+}
+html.mobile .sp-focus-range__input::-webkit-slider-thumb {
+  width: 24px;
+  height: 30px;
+}
