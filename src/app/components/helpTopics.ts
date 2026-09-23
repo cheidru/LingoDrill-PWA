@@ -17,10 +17,10 @@ export type HelpTopic =
    explanation list — so a mock and its copy cannot fall out of step. */
 export const HELP_TOPICS: { key: HelpTopic; width: number; marks: number }[] = [
   { key: "library", width: 600, marks: 6 },
-  { key: "sequences", width: 620, marks: 6 },
-  { key: "editor", width: 640, marks: 7 },
-  { key: "player", width: 720, marks: 7 },
+  { key: "sequences", width: 680, marks: 8 },
+  { key: "editor", width: 640, marks: 8 },
+  { key: "player", width: 760, marks: 9 },
   { key: "favourites", width: 620, marks: 4 },
-  { key: "settings", width: 620, marks: 7 },
+  { key: "settings", width: 620, marks: 8 },
   { key: "about", width: 560, marks: 4 },
 ]

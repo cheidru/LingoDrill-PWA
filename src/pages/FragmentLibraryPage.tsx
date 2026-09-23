@@ -13,7 +13,8 @@ import { useSubtitles } from "../app/hooks/useSubtitles"
 import { useVocabularies } from "../app/hooks/useVocabularies"
 import { useSharedAudioEngine } from "../app/hooks/useSharedAudioEngine"
 import type { Sequence, SequenceFragment } from "../core/domain/types"
-import { PlayIcon, EditIcon, DeleteIcon, CopyIcon, FavouriteIcon } from "../app/components/SequenceIcons"
+import { PlayIcon, EditIcon, DeleteIcon, CopyIcon, FavouriteIcon, ExportIcon } from "../app/components/SequenceIcons"
+import { ExportSequenceDialog } from "../app/components/ExportSequenceDialog"
 import { nanoid } from "nanoid"
 import { useT } from "../utils/i18n"
 
@@ -47,6 +48,19 @@ function SequenceBar({
   )
 }
 
+/** One play of every fragment, repeats not counted: m:ss, or h:mm:ss past an hour. */
+function formatTotal(sec: number): string {
+  const total = Math.round(sec)
+  const h = Math.floor(total / 3600)
+  const m = Math.floor((total % 3600) / 60)
+  const s = String(total % 60).padStart(2, "0")
+  return h > 0 ? `${h}:${String(m).padStart(2, "0")}:${s}` : `${m}:${s}`
+}
+
+function sequenceLength(seq: Sequence): number {
+  return seq.fragments.reduce((sum, f) => sum + Math.max(0, f.end - f.start), 0)
+}
+
 // --- Main page ---
 export function FragmentLibraryPage() {
   return <FragmentLibraryPageInner />
@@ -68,6 +82,7 @@ function FragmentLibraryPageInner() {
   const { vocabularyFiles, addVocabularyFile, deleteVocabularyFile } = useVocabularies(audioId ?? null)
 
   const [confirmDeleteId, setConfirmDeleteId] = useState<string | null>(null)
+  const [exportSeq, setExportSeq] = useState<Sequence | null>(null)
   const [editingLabelId, setEditingLabelId] = useState<string | null>(null)
   const [editingLabelValue, setEditingLabelValue] = useState("")
 
@@ -226,8 +241,10 @@ function FragmentLibraryPageInner() {
                 </span>
               )}
 
-              <span style={{ fontSize: "0.85rem", color: "var(--color-text-muted)" }}>
+              <span className="seq-meta">
                 {t.n("fragmentLibrary.fragments", seq.fragments.length)}
+                <span className="seq-meta__sep">·</span>
+                <span title={t("fragmentLibrary.totalTime")}>{formatTotal(sequenceLength(seq))}</span>
               </span>
 
               <SequenceBar sequence={seq} duration={duration} />
@@ -249,6 +266,14 @@ function FragmentLibraryPageInner() {
                 </button>
                 <button className="seq-controls__btn" onClick={() => handleCopySequence(seq)} title={t("fragmentLibrary.copy")}>
                   <CopyIcon />
+                </button>
+                <button
+                  className="seq-controls__btn"
+                  onClick={() => setExportSeq(seq)}
+                  disabled={seq.fragments.length === 0}
+                  title={t("fragmentLibrary.export")}
+                >
+                  <ExportIcon />
                 </button>
                 <button className="seq-controls__btn" onClick={() => setConfirmDeleteId(seq.id)} title={t("common.delete")} style={{ color: "var(--color-danger)" }}>
                   <DeleteIcon />
@@ -281,6 +306,15 @@ function FragmentLibraryPageInner() {
             </div>
           </div>
         </div>
+      )}
+
+      {/* Export one sequence as a .lingodrill bundle */}
+      {exportSeq && (
+        <ExportSequenceDialog
+          sequence={exportSeq}
+          subtitleFiles={subtitleFiles}
+          onClose={() => setExportSeq(null)}
+        />
       )}
 
       {/* Subtitle file management modal */}

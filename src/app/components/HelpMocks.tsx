@@ -10,7 +10,7 @@
 // after layout and pins a numbered badge to each, and the explanation list under
 // the shot is an <ol>, so the numbers line up without being written twice.
 
-import { PlayIcon, EditIcon, DeleteIcon, CopyIcon, FavouriteIcon } from "./SequenceIcons"
+import { PlayIcon, EditIcon, DeleteIcon, CopyIcon, FavouriteIcon, ExportIcon } from "./SequenceIcons"
 import { VolumeControl } from "./VolumeControl"
 import { APP_VERSION } from "../../utils/version"
 import type { HelpTopic } from "./helpTopics"
@@ -86,6 +86,18 @@ function SeqBar({ n }: { n: number }) {
   )
 }
 
+/* Mirrors the .seq-meta span in FragmentLibraryPage: count · total time. */
+function SeqMeta({ fragments, total, mark }: { fragments: number; total: string; mark?: string }) {
+  const t = useT()
+  return (
+    <span className="seq-meta" data-help={mark}>
+      {t.n("fragmentLibrary.fragments", fragments)}
+      <span className="seq-meta__sep">·</span>
+      {total}
+    </span>
+  )
+}
+
 function SequencesMock() {
   const t = useT()
   return (
@@ -103,12 +115,13 @@ function SequencesMock() {
       <div className="seq-card">
         <div className="seq-bar-wrap">
           <span className="seq-label" data-help="4">#1</span>
-          <span className="hl-mock__meta">{t.n("fragmentLibrary.fragments", 6)}</span>
-          <span data-help="5"><SeqBar n={1} /></span>
-          <div className="seq-controls" data-help="6">
+          <SeqMeta fragments={6} total="0:58" mark="5" />
+          <span data-help="6"><SeqBar n={1} /></span>
+          <div className="seq-controls" data-help="7">
             <button className="seq-controls__btn"><PlayIcon /></button>
             <button className="seq-controls__btn"><EditIcon /></button>
             <button className="seq-controls__btn"><CopyIcon /></button>
+            <button className="seq-controls__btn" data-help="8"><ExportIcon /></button>
             <button className="seq-controls__btn hl-mock__danger"><DeleteIcon /></button>
             <button className="seq-controls__btn"><FavouriteIcon filled={false} /></button>
           </div>
@@ -118,12 +131,13 @@ function SequencesMock() {
       <div className="seq-card">
         <div className="seq-bar-wrap">
           <span className="seq-label">#2</span>
-          <span className="hl-mock__meta">{t.n("fragmentLibrary.fragments", 3)}</span>
+          <SeqMeta fragments={3} total="0:34" />
           <SeqBar n={2} />
           <div className="seq-controls">
             <button className="seq-controls__btn"><PlayIcon /></button>
             <button className="seq-controls__btn"><EditIcon /></button>
             <button className="seq-controls__btn"><CopyIcon /></button>
+            <button className="seq-controls__btn"><ExportIcon /></button>
             <button className="seq-controls__btn hl-mock__danger"><DeleteIcon /></button>
             <button className="seq-controls__btn"><FavouriteIcon filled={true} /></button>
           </div>
@@ -155,7 +169,7 @@ function EditorMock() {
 
       <div className="toolbar">
         <button>{t("common.back")}</button>
-        <button data-help="7">{t("bundle.export")}</button>
+        <button data-help="8">{t("bundle.export")}</button>
         <label className="export-bundle__checkbox">
           <input type="checkbox" defaultChecked readOnly />
           <span className="hl-mock__meta">{t("bundle.includeAudio")}</span>
@@ -193,12 +207,13 @@ function EditorMock() {
         <button className="action-bar__btn" data-help="3">{t("editor.autoDetect")}</button>
         <button className="action-bar__btn" data-help="4">{t("editor.trim")}</button>
         <button className="action-bar__btn" data-help="5">{t("editor.normalize")}</button>
+        <button className="action-bar__btn" data-help="6">{t("editor.maximize")}</button>
         <button className="action-bar__btn action-bar__btn--danger">{t("editor.deleteAll")}</button>
       </div>
 
       <div className="fragment-row fragment-row--editing">
         <span className="fragment-row__time">0:12 – 0:32</span>
-        <div className="fragment-row__actions" data-help="6">
+        <div className="fragment-row__actions" data-help="7">
           <button className="btn-sub">▶</button>
           <button className="btn-sub">{t("fragmentLibrary.sub")}</button>
           <button className="btn-sub">{t("fragmentLibrary.vocab")}</button>
@@ -223,7 +238,7 @@ function EditorMock() {
 const PLAYER_ROWS = [
   { idx: 1, time: "0:01 – 0:08", dur: "7.0s" },
   { idx: 2, time: "0:10 – 0:16", dur: "6.0s" },
-  { idx: 3, time: "0:19 – 0:27", dur: "8.0s" },
+  { idx: 3, time: "0:19 – 0:27", dur: "8.0s", skipped: true },
 ]
 
 const PauseGlyph = ({ size = 16 }: { size?: number | string }) => (
@@ -256,6 +271,12 @@ const RewindCountGlyph = () => (
 const InfiniteRewindGlyph = () => (
   <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M9.828 9.172a4 4 0 1 0 0 5.656a10 10 0 0 0 2.172 -2.828a10 10 0 0 1 2.172 -2.828a4 4 0 1 1 0 5.656a10 10 0 0 1 -2.172 -2.828a10 10 0 0 0 -2.172 -2.828" />
+  </svg>
+)
+const FocusGlyph = () => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 4H4v16h3" /><path d="M17 4h3v16h-3" />
+    <rect x="9" y="10" width="6" height="4" fill="currentColor" stroke="none" />
   </svg>
 )
 const PrevGlyph = () => (
@@ -305,34 +326,53 @@ function PlayerMock() {
         <button className="sp-playall-btn sp-loop-btn sp-loop-btn--active" data-help="2">
           <InfiniteRewindGlyph />
         </button>
-        <label className="sp-global-speed" data-help="3">
+        <button className="sp-playall-btn sp-loop-btn sp-exclude-all-btn" data-help="3">
+          <SkipGlyph />
+        </button>
+        <label className="sp-global-speed" data-help="4">
           <span className="sp-global-speed__icon"><SpeedGlyph /></span>
           <input type="range" min={0.5} max={1.5} step={0.05} defaultValue={1} className="sp-global-speed__input" readOnly />
           <span className="sp-global-speed__value">1.00×</span>
         </label>
-        <span data-help="4"><VolumeControl volume={0.8} onVolumeChange={() => {}} /></span>
+        <span data-help="5"><VolumeControl volume={0.8} onVolumeChange={() => {}} /></span>
       </div>
 
       <div className="sp-frag-item sp-frag-item--playing sp-frag-item--selected hl-mock__sp-item">
-        <div className="sp-frag-row" data-help="5">
+        <div className="sp-frag-row" data-help="6">
           <span className="sp-frag-idx">1</span>
           <span className="sp-frag-time">0:01 – 0:08</span>
           <span className="sp-frag-duration">7.0s</span>
           <span className="sp-frag-repeat">×3</span>
+          <span className="sp-frag-focus">⟦2.0–4.5⟧</span>
           <span className="sp-frag-sub-indicator">📝</span>
           <span className="sp-frag-playing-indicator">▶</span>
         </div>
       </div>
 
       <div className="hl-mock__sp-strip">
-        <div className="sp-subtitle-display" data-help="6">
+        <div className="sp-subtitle-display" data-help="7">
           <div className="hl-mock__sub-name">lesson-01.srt</div>
           <div className="hl-mock__sub-text">
             So what you want to do is listen for the linking — it all runs together.
           </div>
         </div>
         <div className="sp-control-panel">
-          <div className="sp-control-row" data-help="7">
+          {/* Mirrors FocusStrip in SequencePlayerPage, frozen at 2.0–4.5s of a 7s fragment */}
+          <div className="sp-focus-strip" data-help="9">
+            <div className="sp-focus-strip__head">
+              <span className="sp-focus-strip__title">{t("player.focus.title")}</span>
+              <span className="sp-focus-strip__readout">0:03 – 0:05 · 2.5s</span>
+              <button className="sp-ctrl-btn sp-focus-strip__clear"><CloseGlyph /></button>
+            </div>
+            <div className="sp-focus-range">
+              <div className="sp-focus-range__track" />
+              <div className="sp-focus-range__fill hl-mock__focus-fill" />
+              <div className="sp-focus-range__cursor hl-mock__focus-cursor" />
+              <input type="range" className="sp-focus-range__input" min={1} max={8} step={0.05} defaultValue={3} readOnly />
+              <input type="range" className="sp-focus-range__input" min={1} max={8} step={0.05} defaultValue={5.5} readOnly />
+            </div>
+          </div>
+          <div className="sp-control-row" data-help="8">
             <button className="sp-ctrl-btn"><PauseGlyph size="1em" /></button>
             <button className="sp-ctrl-btn"><StopGlyph size="1em" /></button>
             <button className="sp-ctrl-btn"><SkipGlyph /></button>
@@ -342,6 +382,7 @@ function PlayerMock() {
               <span className="sp-speed-btn__value">×3</span>
             </button>
             <button className="sp-ctrl-btn"><InfiniteRewindGlyph /></button>
+            <button className="sp-ctrl-btn sp-ctrl-btn--active"><FocusGlyph /></button>
             <label className="sp-speed-slider">
               <span className="sp-speed-slider__icon"><SpeedGlyph /></span>
               <input type="range" min={0.5} max={1.5} step={0.05} defaultValue={1} className="sp-speed-slider__input" readOnly />
@@ -357,13 +398,14 @@ function PlayerMock() {
       </div>
 
       {PLAYER_ROWS.slice(1).map(r => (
-        <div key={r.idx} className="sp-frag-item hl-mock__sp-item">
+        <div key={r.idx} className={`sp-frag-item hl-mock__sp-item${r.skipped ? " sp-frag-item--disabled" : ""}`}>
           <div className="sp-frag-row">
             <span className="sp-frag-idx">{r.idx}</span>
             <span className="sp-frag-time">{r.time}</span>
             <span className="sp-frag-duration">{r.dur}</span>
             <span className="sp-frag-repeat">×3</span>
             <span className="sp-frag-sub-indicator">📝</span>
+            {r.skipped && <span className="sp-frag-disabled-indicator">{t("player.skip")}</span>}
           </div>
         </div>
       ))}
@@ -414,6 +456,20 @@ const ResetGlyph = () => (
   <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M3 12a9 9 0 1 0 3.2-6.9L3 8" />
     <path d="M3 3v5h5" />
+  </svg>
+)
+
+const PlusGlyph = () => (
+  <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" aria-hidden="true">
+    <path d="M12 5v14M5 12h14" />
+  </svg>
+)
+const PaletteGlyph = () => (
+  <svg width="26" height="26" viewBox="0 0 24 24" fill="currentColor" aria-hidden="true">
+    <path
+      fillRule="evenodd"
+      d="M12 3a9 9 0 0 0 0 18c.83 0 1.5-.67 1.5-1.5 0-.39-.15-.74-.39-1.01-.23-.26-.38-.61-.38-.99 0-.83.67-1.5 1.5-1.5H16c2.76 0 5-2.24 5-5 0-4.42-4.03-8-9-8zm-5.5 9a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3-4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm5 0a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3zm3 4a1.5 1.5 0 1 1 0-3 1.5 1.5 0 0 1 0 3z"
+    />
   </svg>
 )
 
@@ -483,7 +539,40 @@ function SettingsMock() {
             </span>
           </div>
         </SettingsRow>
-        <SettingsRow label={t("settings.subFontSize")} hint={t("settings.subFontSize.hint")} mark="5" stacked>
+        {/* Mirrors the bg-picker in SettingsPage under the light theme. The
+            swatch colours come from help.css by position, the real BG_PALETTES
+            values, rather than from per-swatch inline styles. */}
+        <div className="settings-row settings-row--stacked">
+          <div className="settings-row__text">
+            <span className="settings-row__label">{t("settings.bgColor")}</span>
+            <span className="settings-row__hint">{t("settings.bgColor.hint")}</span>
+          </div>
+          <div className="bg-picker" data-help="5">
+            <div className="bg-picker__sample bg-picker__sample--light hl-mock__bg-sample">
+              <span className="bg-picker__sample-label">{t("settings.bgColor.light")}</span>
+              <span className="settings-reset"><ResetGlyph /></span>
+            </div>
+            <div className="bg-picker__body">
+              <div className="bg-picker__rows">
+                {(["light", "dark"] as const).map(theme => (
+                  <div key={theme} className={`bg-picker__row bg-picker__row--${theme} hl-mock__bg-row--${theme}`}>
+                    {Array.from({ length: 9 }, (_, i) => (
+                      <button key={i} className="bg-picker__swatch" disabled={theme === "dark"} />
+                    ))}
+                    <button className="bg-picker__swatch bg-picker__swatch--user" disabled={theme === "dark"} />
+                    {[0, 1].map(i => (
+                      <button key={`empty-${i}`} className="bg-picker__swatch bg-picker__swatch--user bg-picker__swatch--empty" disabled={theme === "dark"}>
+                        <PlusGlyph />
+                      </button>
+                    ))}
+                  </div>
+                ))}
+              </div>
+              <span className="bg-picker__custom"><PaletteGlyph /></span>
+            </div>
+          </div>
+        </div>
+        <SettingsRow label={t("settings.subFontSize")} hint={t("settings.subFontSize.hint")} mark="6" stacked>
           <input type="range" className="settings-slider" min={10} max={32} defaultValue={14} readOnly />
           <span className="settings-value">14px</span>
         </SettingsRow>
@@ -491,11 +580,11 @@ function SettingsMock() {
 
       <h3 className="settings-group__title hl-mock__group-title">{t("settings.section.playback")}</h3>
       <div className="settings-card">
-        <SettingsRow label={t("settings.fragmentGap")} hint={t("settings.fragmentGap.hint")} mark="6" stacked>
+        <SettingsRow label={t("settings.fragmentGap")} hint={t("settings.fragmentGap.hint")} mark="7" stacked>
           <input type="range" className="settings-slider" min={0} max={10} step={0.5} defaultValue={2} readOnly />
           <span className="settings-value">2.0s</span>
         </SettingsRow>
-        <SettingsRow label={t("settings.trimSilenceGap")} hint={t("settings.trimSilenceGap.hint")} mark="7" stacked>
+        <SettingsRow label={t("settings.trimSilenceGap")} hint={t("settings.trimSilenceGap.hint")} mark="8" stacked>
           <input type="range" className="settings-slider" min={0} max={10} step={0.5} defaultValue={3} readOnly />
           <span className="settings-value">3.0s</span>
           <span className="settings-reset"><ResetGlyph /></span>

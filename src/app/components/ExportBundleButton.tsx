@@ -1,7 +1,7 @@
 // app/components/ExportBundleButton.tsx
 
 import { useState, useCallback } from "react"
-import { exportBundle } from "../../core/bundle/exportBundle"
+import { downloadBundle } from "../../utils/downloadBundle"
 import type { Sequence, SubtitleFile } from "../../core/domain/types"
 import { useT } from "../../utils/i18n"
 
@@ -47,27 +47,14 @@ export function ExportBundleButton({
         return
       }
 
-      const bundleBlob = await exportBundle({
+      await downloadBundle({
         audioBlob: blob,
         audioName,
-        audioMimeType: blob.type || "audio/mpeg",
-        audioSize: blob.size,
         waveform: waveformData,
         sequences,
         subtitleFiles,
         includeAudio,
       })
-
-      // Trigger download
-      const url = URL.createObjectURL(bundleBlob)
-      const a = document.createElement("a")
-      const baseName = audioName.replace(/\.[^.]+$/, "")
-      a.href = url
-      a.download = `${baseName}.lingodrill`
-      document.body.appendChild(a)
-      a.click()
-      document.body.removeChild(a)
-      URL.revokeObjectURL(url)
     } catch (err) {
       console.error("Export failed:", err)
       alert(t("bundle.exportFailed"))

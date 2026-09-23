@@ -111,3 +111,13 @@ html.mobile .import-bundle__error-file {
 html.mobile .import-bundle__error-excerpt {
   font-size: 0.8rem;
 }
+
+/* === Per-sequence export dialog (Fragment Library) === */
+.export-seq { max-width: 380px; text-align: left; }
+.export-seq__title { margin-top: 0; }
+.export-seq__hint {
+  font-size: 0.85rem;
+  color: var(--color-text-muted);
+  margin: 0 0 12px;
+}
+.export-seq__checkbox { margin-bottom: 4px; }

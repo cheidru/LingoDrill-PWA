@@ -12,7 +12,7 @@
 import { useCallback, useEffect, useLayoutEffect, useRef, useState } from "react"
 import type { CSSProperties } from "react"
 import { useT } from "../../utils/i18n"
-import { PlayIcon, EditIcon, DeleteIcon, CopyIcon, FavouriteIcon } from "./SequenceIcons"
+import { PlayIcon, EditIcon, DeleteIcon, CopyIcon, FavouriteIcon, ExportIcon } from "./SequenceIcons"
 import { VolumeControl } from "./VolumeControl"
 
 export type DemoStage = "library" | "sequences" | "editor" | "player"
@@ -246,6 +246,8 @@ const SEQ_BARS = [
   [{ x: 4, w: 26 }, { x: 38, w: 34 }, { x: 80, w: 22 }, { x: 112, w: 40 }, { x: 158, w: 18 }, { x: 182, w: 14 }],
   [{ x: 10, w: 44 }, { x: 66, w: 30 }, { x: 108, w: 52 }],
 ]
+/* Each card's total time, shown after its fragment count as on the real page. */
+const SEQ_TOTALS = ["0:58", "0:34"]
 
 /* `edit` / `play` mark one of the card's buttons as a cursor target: step 02
    ends on Edit (the route into step 03) and step 04 opens on Play (the route
@@ -268,7 +270,11 @@ function SequenceCard({
     <div className="seq-card ob-demo__reveal">
       <div className="seq-bar-wrap">
         <span className="seq-label">#{n}</span>
-        <span className="ob-demo__meta">{t.n("fragmentLibrary.fragments", fragments)}</span>
+        <span className="seq-meta">
+          {t.n("fragmentLibrary.fragments", fragments)}
+          <span className="seq-meta__sep">·</span>
+          {SEQ_TOTALS[n - 1]}
+        </span>
         <svg width="200" height="16" className="ob-demo__seqbar">
           <rect x="0" y="2" width="200" height="12" fill="#fef3c7" />
           {SEQ_BARS[n - 1].map(f => (
@@ -289,6 +295,7 @@ function SequenceCard({
             <EditIcon />
           </button>
           <button className="seq-controls__btn"><CopyIcon /></button>
+          <button className="seq-controls__btn"><ExportIcon /></button>
           <button className="seq-controls__btn ob-demo__danger"><DeleteIcon /></button>
           <button className="seq-controls__btn"><FavouriteIcon filled={false} /></button>
         </div>
@@ -408,6 +415,7 @@ function EditorMock({ phase }: { phase: number }) {
         <button className="action-bar__btn">{t("editor.autoDetect")}</button>
         <button className="action-bar__btn">{t("editor.trim")}</button>
         <button className="action-bar__btn">{t("editor.normalize")}</button>
+        <button className="action-bar__btn">{t("editor.maximize")}</button>
         <button className="action-bar__btn action-bar__btn--danger">{t("editor.deleteAll")}</button>
       </div>
 
@@ -489,6 +497,12 @@ const RewindCountGlyph = () => (
 const InfiniteRewindGlyph = () => (
   <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.4" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
     <path d="M9.828 9.172a4 4 0 1 0 0 5.656a10 10 0 0 0 2.172 -2.828a10 10 0 0 1 2.172 -2.828a4 4 0 1 1 0 5.656a10 10 0 0 1 -2.172 -2.828a10 10 0 0 0 -2.172 -2.828" />
+  </svg>
+)
+const FocusGlyph = () => (
+  <svg width="1em" height="1em" viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2.2" strokeLinecap="round" strokeLinejoin="round" aria-hidden="true">
+    <path d="M7 4H4v16h3" /><path d="M17 4h3v16h-3" />
+    <rect x="9" y="10" width="6" height="4" fill="currentColor" stroke="none" />
   </svg>
 )
 const PrevGlyph = () => (
@@ -587,6 +601,9 @@ function PlayerMock({ phase }: { phase: number }) {
         >
           <InfiniteRewindGlyph />
         </button>
+        <button className="sp-playall-btn sp-loop-btn sp-exclude-all-btn">
+          <SkipGlyph />
+        </button>
         <label className="sp-global-speed">
           <span className="sp-global-speed__icon"><SpeedGlyph /></span>
           <input type="range" min={0.5} max={1.5} step={0.05} defaultValue={1} className="sp-global-speed__input" />
@@ -636,6 +653,7 @@ function PlayerMock({ phase }: { phase: number }) {
                   <span className="sp-speed-btn__value">×3</span>
                 </button>
                 <button className="sp-ctrl-btn"><InfiniteRewindGlyph /></button>
+                <button className="sp-ctrl-btn"><FocusGlyph /></button>
                 <label className="sp-speed-slider">
                   <span className="sp-speed-slider__icon"><SpeedGlyph /></span>
                   <input type="range" min={0.5} max={1.5} step={0.05} defaultValue={1} className="sp-speed-slider__input" />

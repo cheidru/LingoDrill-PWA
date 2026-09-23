@@ -1280,6 +1280,8 @@ html.mobile .header__overlay {
   color: var(--color-primary);
 }
 .seq-label { flex: 1; min-width: 60px; font-size: 0.9rem; font-weight: 600; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; color: var(--color-text); }
+.seq-meta { font-size: 0.85rem; color: var(--color-text-muted); white-space: nowrap; }
+.seq-meta__sep { margin: 0 6px; }
 .seq-label-input {
   flex: 1;
   min-width: 60px;

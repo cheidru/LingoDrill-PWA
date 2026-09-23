@@ -19,9 +19,9 @@ type Props = {
 const SCREENS: { key: string; demo: DemoStage | null; num: string | null; tips?: number }[] = [
   { key: "welcome", demo: null, num: null },
   { key: "library", demo: "library", num: "01" },
-  { key: "sequences", demo: "sequences", num: "02", tips: 3 },
-  { key: "editor", demo: "editor", num: "03", tips: 4 },
-  { key: "player", demo: "player", num: "04", tips: 7 },
+  { key: "sequences", demo: "sequences", num: "02", tips: 5 },
+  { key: "editor", demo: "editor", num: "03", tips: 6 },
+  { key: "player", demo: "player", num: "04", tips: 9 },
 ]
 
 const FOCUSABLE = 'button:not([disabled]), [href], input, select, textarea, [tabindex]:not([tabindex="-1"])'

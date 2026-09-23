@@ -74,6 +74,15 @@ const PINCH_ZOOM_SPEED = 2.5
 // Touch gesture timing (ms)
 const LONG_PRESS_MS = 500    // long press to drag/create fragment
 
+/* Swipe momentum. A flick keeps the zoomed waveform gliding after the finger
+   lifts, so a long file can be crossed in a couple of swipes instead of many
+   short drags. Velocities are in visible widths per ms, so a flick feels the
+   same at every zoom level. */
+const FLING_MIN_VELOCITY = 0.0005   // slower than this at release: no glide
+const FLING_STOP_VELOCITY = 0.00005
+const FLING_FRICTION = 0.95         // velocity kept per 16 ms frame
+const FLING_RELEASE_MS = 80         // finger idle this long before lifting = a stop, not a flick
+
 export function Waveform({
   data,
   duration,
@@ -146,6 +155,11 @@ export function Waveform({
   const touchStartTimeRef = useRef(0)
   const touchNearCursorRef = useRef(false)  // was the touch start near the playback cursor?
   const touchNearHandleRef = useRef<"start" | "end" | null>(null)  // was the touch start near an editing handle?
+
+  // Swipe momentum: velocity in scrollOffset units per ms, and the running glide
+  const swipeVelocityRef = useRef(0)
+  const lastSwipeTimeRef = useRef(0)
+  const flingFrameRef = useRef<number | null>(null)
 
   // Visual feedback for long-press state
   const [longPressReady, setLongPressReady] = useState(false)
@@ -581,6 +595,33 @@ export function Waveform({
       if (longPressTimerRef.current) { clearTimeout(longPressTimerRef.current); longPressTimerRef.current = null }
     }
 
+    const stopFling = () => {
+      if (flingFrameRef.current !== null) { cancelAnimationFrame(flingFrameRef.current); flingFrameRef.current = null }
+    }
+
+    const startFling = (velocity: number) => {
+      stopFling()
+      let v = velocity
+      let last = performance.now()
+      const step = (now: number) => {
+        const dt = now - last
+        last = now
+        const currentZoom = zoomRef.current
+        const maxOffset = Math.max(0, 1 - 1 / currentZoom)
+        const next = Math.max(0, Math.min(maxOffset, scrollOffsetRef.current + v * dt))
+        // Written ahead of the render so the next frame starts from here
+        scrollOffsetRef.current = next
+        setScrollOffset(next)
+        v *= Math.pow(FLING_FRICTION, dt / 16)
+        if (Math.abs(v) * currentZoom < FLING_STOP_VELOCITY || next <= 0 || next >= maxOffset) {
+          flingFrameRef.current = null
+          return
+        }
+        flingFrameRef.current = requestAnimationFrame(step)
+      }
+      flingFrameRef.current = requestAnimationFrame(step)
+    }
+
     const getTouchX = (touch: Touch) => {
       const rect = canvas.getBoundingClientRect()
       const scaleX = canvas.width / rect.width
@@ -588,6 +629,8 @@ export function Waveform({
     }
 
     const handleTouchStart = (e: TouchEvent) => {
+      // A new touch catches a gliding waveform where it is
+      stopFling()
 
       // --- 2-finger: pinch zoom ---
       if (e.touches.length === 2) {
@@ -639,8 +682,9 @@ export function Waveform({
       touchActionRef.current = "tap"
       setLongPressReady(false)
 
-      // Long press timer → enables drag or new fragment
+      // Long press timer → enables drag or new fragment (mobile only; see handleTouchMove)
       clearTimers()
+      if (!isMobile) return
       longPressTimerRef.current = setTimeout(() => {
         if (touchActionRef.current !== "tap") return // already transitioned to swipe
         touchActionRef.current = "wait-long"
@@ -724,9 +768,16 @@ export function Waveform({
         const rect = canvas.getBoundingClientRect()
         const currentZoom = zoomRef.current
         const currentOffset = scrollOffsetRef.current
-        const newOffset = currentOffset - (deltaClientX / rect.width) * (1 / currentZoom)
-        const clampedOffset = Math.max(0, Math.min(1 - 1 / currentZoom, newOffset))
+        const delta = -(deltaClientX / rect.width) * (1 / currentZoom)
+        const clampedOffset = Math.max(0, Math.min(1 - 1 / currentZoom, currentOffset + delta))
+        scrollOffsetRef.current = clampedOffset
         setScrollOffset(clampedOffset)
+
+        // Smoothed, so one jittery sample at release does not decide the glide
+        const now = performance.now()
+        const dt = now - lastSwipeTimeRef.current
+        if (dt > 0) swipeVelocityRef.current = 0.8 * (delta / dt) + 0.2 * swipeVelocityRef.current
+        lastSwipeTimeRef.current = now
         return
       }
 
@@ -736,6 +787,22 @@ export function Waveform({
       if (touchActionRef.current === "tap") {
         const rawDx = Math.abs(currentClientX - touchStartClientXRef.current)
         const rawDy = Math.abs(currentClientY - touchStartYRef.current)
+
+        /* Swiping the waveform is a phone gesture. On a desktop touchscreen a
+           drag means what a mouse drag means — grab the cursor or a handle, or
+           draw a new fragment — so it goes there at once, no long press. */
+        if (!isMobile) {
+          if (rawDx > 8 || rawDy > 8) {
+            if (rawDx >= rawDy) {
+              beginDragAction(x, e)
+            } else {
+              clearTimers()
+              touchMovedRef.current = true
+              touchActionRef.current = "none"
+            }
+          }
+          return
+        }
 
         // If near a draggable target, tolerate more movement to allow long press
         const nearDraggable = touchNearCursorRef.current || touchNearHandleRef.current !== null
@@ -749,7 +816,12 @@ export function Waveform({
           if (rawDx >= rawDy) {
             touchActionRef.current = "swipe-scroll"
             touchStartClientXRef.current = currentClientX
+            swipeVelocityRef.current = 0
+            lastSwipeTimeRef.current = performance.now()
             e.preventDefault()
+          } else {
+            // Vertical: the page scrolls, the waveform stays out of it
+            touchActionRef.current = "none"
           }
           return
         }
@@ -764,39 +836,41 @@ export function Waveform({
         const rawDx = Math.abs(currentClientX - touchStartClientXRef.current)
         const rawDy = Math.abs(currentClientY - touchStartYRef.current)
 
-        if (rawDx > 5 || rawDy > 5) {
-          clearTimers()
-          setLongPressReady(false)
-
-          // 1) Grab playback cursor (proximity was checked at touch start)
-          if (touchNearCursorRef.current && s.onSeek) {
-            touchActionRef.current = "drag-cursor"
-            setDraggingCursor(true)
-            setSelection(null)
-            // Immediately seek to touch position so cursor snaps to finger
-            s.onSeek(pxToSecondsRef.current(x))
-            e.preventDefault()
-            return
-          }
-
-          // 2) Grab editing handle (proximity was checked at touch start)
-          if (touchNearHandleRef.current && s.editingId) {
-            touchActionRef.current = "drag-handle"
-            setDragging({ id: s.editingId, side: touchNearHandleRef.current })
-            setSelection(null)
-            e.preventDefault()
-            return
-          }
-
-          // 3) Not near cursor or handle → create new fragment
-          touchActionRef.current = "select"
-          touchMovedRef.current = true
-          setIsSelecting(true)
-          setSelection({ startX: touchStartXRef.current, endX: x })
-          e.preventDefault()
-        }
+        if (rawDx > 5 || rawDy > 5) beginDragAction(x, e)
         return
       }
+    }
+
+    // Priority: cursor > editing handle > new fragment
+    const beginDragAction = (x: number, e: TouchEvent) => {
+      const s = stateRef.current
+      clearTimers()
+      setLongPressReady(false)
+      e.preventDefault()
+
+      // 1) Grab playback cursor (proximity was checked at touch start)
+      if (touchNearCursorRef.current && s.onSeek) {
+        touchActionRef.current = "drag-cursor"
+        setDraggingCursor(true)
+        setSelection(null)
+        // Immediately seek to touch position so cursor snaps to finger
+        s.onSeek(pxToSecondsRef.current(x))
+        return
+      }
+
+      // 2) Grab editing handle (proximity was checked at touch start)
+      if (touchNearHandleRef.current && s.editingId) {
+        touchActionRef.current = "drag-handle"
+        setDragging({ id: s.editingId, side: touchNearHandleRef.current })
+        setSelection(null)
+        return
+      }
+
+      // 3) Not near cursor or handle → create new fragment
+      touchActionRef.current = "select"
+      touchMovedRef.current = true
+      setIsSelecting(true)
+      setSelection({ startX: touchStartXRef.current, endX: x })
     }
 
     const handleTouchEnd = (e: TouchEvent) => {
@@ -815,6 +889,12 @@ export function Waveform({
 
       if (touchActionRef.current === "drag-cursor") {
         setDraggingCursor(false)
+      }
+
+      if (touchActionRef.current === "swipe-scroll") {
+        const v = swipeVelocityRef.current
+        const stillMoving = performance.now() - lastSwipeTimeRef.current < FLING_RELEASE_MS
+        if (stillMoving && Math.abs(v) * zoomRef.current >= FLING_MIN_VELOCITY) startFling(v)
       }
 
       if (touchActionRef.current === "drag-handle") {
@@ -837,6 +917,10 @@ export function Waveform({
 
       // Tap or wait-long without drag — handle fragment click / click outside
       if ((touchActionRef.current === "tap" || touchActionRef.current === "wait-long") && !touchMovedRef.current) {
+        /* The tap is handled here, so keep the browser from replaying it as
+           mousedown/mouseup: handleMouseDown would treat it as a second click
+           and, on a fragment just selected, toggle its playback. */
+        if (e.cancelable) e.preventDefault()
         // Clear selection preview from wait-long
         setSelection(null)
         setIsSelecting(false)
@@ -862,6 +946,7 @@ export function Waveform({
     canvas.addEventListener("touchend", handleTouchEnd)
     return () => {
       clearTimers()
+      stopFling()
       canvas.removeEventListener("touchstart", handleTouchStart)
       canvas.removeEventListener("touchmove", handleTouchMove)
       canvas.removeEventListener("touchend", handleTouchEnd)

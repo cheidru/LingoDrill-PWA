@@ -292,6 +292,35 @@
 .hl-mock__page .sp-global-speed__input { width: 64px; }
 .hl-mock__page .volume-control__slider { width: 70px; }
 
+/* Focus strip frozen at 3.0–5.5s of a 1–8s fragment, playhead at 4.2s */
+.hl-mock__focus-fill { left: 28.6%; width: 35.7%; }
+.hl-mock__focus-cursor { left: 45.7%; }
+
+/* Settings background picker. The sample shows the light theme's own ground;
+   the swatches are BG_PALETTES from utils/settings.ts, in order, and the first
+   user slot holds one saved colour. */
+.hl-mock__bg-sample { background-color: var(--color-bg-page); }
+.hl-mock__bg-row--light > :nth-child(1) { background-color: #e0c7c7; }
+.hl-mock__bg-row--light > :nth-child(2) { background-color: #e1cbdb; }
+.hl-mock__bg-row--light > :nth-child(3) { background-color: #d3d2e5; }
+.hl-mock__bg-row--light > :nth-child(4) { background-color: #c9e0e1; }
+.hl-mock__bg-row--light > :nth-child(5) { background-color: #cfe2cd; }
+.hl-mock__bg-row--light > :nth-child(6) { background-color: #e4e4ce; }
+.hl-mock__bg-row--light > :nth-child(7) { background-color: #e2d8cd; }
+.hl-mock__bg-row--light > :nth-child(8) { background-color: #ffffff; }
+.hl-mock__bg-row--light > :nth-child(9) { background-color: #b8b8b8; }
+.hl-mock__bg-row--light > :nth-child(10) { background-color: #d6e4f0; }
+.hl-mock__bg-row--dark > :nth-child(1) { background-color: #300000; }
+.hl-mock__bg-row--dark > :nth-child(2) { background-color: #30002a; }
+.hl-mock__bg-row--dark > :nth-child(3) { background-color: #050535; }
+.hl-mock__bg-row--dark > :nth-child(4) { background-color: #00292b; }
+.hl-mock__bg-row--dark > :nth-child(5) { background-color: #012601; }
+.hl-mock__bg-row--dark > :nth-child(6) { background-color: #2e2e00; }
+.hl-mock__bg-row--dark > :nth-child(7) { background-color: #2b1603; }
+.hl-mock__bg-row--dark > :nth-child(8) { background-color: #333333; }
+.hl-mock__bg-row--dark > :nth-child(9) { background-color: #000000; }
+.hl-mock__bg-row--dark > :nth-child(10) { background-color: #1a2233; }
+
 /* About — a slice of the header with its dropdown open */
 .hl-mock__about {
   padding-bottom: 8px;
