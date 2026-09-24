@@ -682,9 +682,10 @@ export function Waveform({
       touchActionRef.current = "tap"
       setLongPressReady(false)
 
-      // Long press timer → enables drag or new fragment (mobile only; see handleTouchMove)
+      // Long press timer → enables drag or new fragment (mobile only; see handleTouchMove).
+      // The playback thumb needs none: it is dragged straight away.
       clearTimers()
-      if (!isMobile) return
+      if (!isMobile || touchNearCursorRef.current) return
       longPressTimerRef.current = setTimeout(() => {
         if (touchActionRef.current !== "tap") return // already transitioned to swipe
         touchActionRef.current = "wait-long"
@@ -804,9 +805,25 @@ export function Waveform({
           return
         }
 
-        // If near a draggable target, tolerate more movement to allow long press
-        const nearDraggable = touchNearCursorRef.current || touchNearHandleRef.current !== null
-        const threshold = nearDraggable ? 40 : 8
+        /* The playback thumb is a handle, not a spot on the waveform: a drag
+           that starts on it moves it at once instead of waiting for a long
+           press, and never turns into a swipe — at 1× there is nothing to
+           swipe, so the thumb would just sit there under the finger. */
+        if (touchNearCursorRef.current) {
+          if (rawDx > 5 || rawDy > 5) {
+            if (rawDx >= rawDy) {
+              beginDragAction(x, e)
+            } else {
+              // Vertical: the page scrolls, the waveform stays out of it
+              touchMovedRef.current = true
+              touchActionRef.current = "none"
+            }
+          }
+          return
+        }
+
+        // Near a fragment handle, tolerate more movement to allow long press
+        const threshold = touchNearHandleRef.current !== null ? 40 : 8
 
         if (rawDx > threshold || rawDy > threshold) {
           clearTimers()
