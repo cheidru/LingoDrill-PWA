@@ -33,6 +33,7 @@ import { VolumeControl } from "../app/components/VolumeControl"
 import { ExportBundleButton } from "../app/components/ExportBundleButton"
 import { MobileInstructionModal } from "../app/components/MobileInstructionModal"
 import { HeavyOperationErrorBoundary } from "../app/components/HeavyOperationErrorBoundary"
+import { OperationProgressIndicator } from "../app/components/OperationProgressIndicator"
 import type { WaveformFragment } from "../app/components/Waveform"
 import { streamWaveform } from "../utils/streamWaveform"
 import { detectSpeechSegments } from "../utils/detectSpeech"
@@ -41,6 +42,7 @@ import { trimSilence } from "../utils/trimSilence"
 import { useT } from "../utils/i18n"
 import { normalizeFragments } from "../utils/normalizeFragments"
 import { maximizeFragments } from "../utils/maximizeFragments"
+import { OperationProgress, audioFormatOf, type OpStageKey } from "../utils/operationProgress"
 import type { PlayableFragment } from "../core/audio/audioEngine"
 import { getFragmentGap } from "../utils/settings"
 import type { Sequence, SequenceFragment, FragmentSubtitle, FragmentVocabulary, SubtitleFile, VocabularyFile, ProcessedOp } from "../core/domain/types"
@@ -76,9 +78,6 @@ function formatHoursMinutes(sec: number, hLabel: string, mLabel: string): string
  * that splitting the file into parts is the better answer.
  */
 const MAX_AUTO_DETECT_SEC = 3 * 60 * 60
-
-/** Share of the auto-detect progress bar spent decoding, before VAD starts. */
-const DECODE_PROGRESS_SHARE = 0.4
 
 /** The two fragment-gain operations, which share one fragment picker. */
 type VolumeOp = "normalize" | "maximize"
@@ -255,7 +254,21 @@ function FragmentEditorPageInner() {
 
   // --- VAD auto-detect state ---
   const [vadDetecting, setVadDetecting] = useState(false)
-  const [, setVadProgress] = useState(0)
+  /* Whichever long operation is running (auto-detect, trim, normalize,
+     maximize). The tracker adds its stages up into one percent and a time-left
+     estimate; OperationProgressIndicator polls it, so progress callbacks never
+     re-render this page — only starting and ending an operation does. */
+  const [op, setOp] = useState<OperationProgress | null>(null)
+  const beginOp = useCallback((title: string, stages: OpStageKey[], blob: Blob) => {
+    const tracker = new OperationProgress(
+      title,
+      stages.map(key => ({ key, label: t(`op.stage.${key}`) })),
+      duration,
+      audioFormatOf(blob),
+    )
+    setOp(tracker)
+    return tracker
+  }, [duration, t])
   const [vadDone, setVadDone] = useState(false)
 
   // Load audio
@@ -573,7 +586,7 @@ function FragmentEditorPageInner() {
     savedBoundsRef.current = null
 
     setVadDetecting(true)
-    setVadProgress(0)
+    const tracker = beginOp(t("editor.op.autoDetect"), ["decode", "vad"], blob)
 
     // ОБЁРНУТО в wrapHeavyOp
     // Декодируем в моно 16 кГц чанками (decodeMonoPcm), а не целиком через
@@ -581,27 +594,25 @@ function FragmentEditorPageInner() {
     // браузера буфер на несколько гигабайт и падает — это и была ошибка
     // «Auto-detect speech failed» на десктопе.
     const segments = await wrapHeavyOp(t("editor.op.autoDetect"), async () => {
-      const { samples, sampleRate } = await decodeMonoPcm(blob, {
-        onProgress: (p) => setVadProgress(p * DECODE_PROGRESS_SHARE),
-      })
+      const { samples, sampleRate } = await decodeMonoPcm(blob, { onProgress: tracker.setProgress })
 
-      const segs = await detectSpeechSegments(samples, sampleRate, (p) => {
-        setVadProgress(DECODE_PROGRESS_SHARE + p * (1 - DECODE_PROGRESS_SHARE))
-      })
+      tracker.startStage("vad")
+      const segs = await detectSpeechSegments(samples, sampleRate, tracker.setProgress)
+      tracker.finish()
       return segs
     })
 
     if (segments === null) {
       // Error handled by wrapHeavyOp → MobileInstructionModal shown
       setVadDetecting(false)
-      setVadProgress(0)
+      setOp(null)
       return
     }
 
     if (segments.length === 0) {
-      alert(t("editor.noSpeechDetected"))
       setVadDetecting(false)
-      setVadProgress(0)
+      setOp(null)
+      alert(t("editor.noSpeechDetected"))
       return
     }
 
@@ -618,8 +629,8 @@ function FragmentEditorPageInner() {
     await persistSequence(newFragments)
     setVadDone(true)
     setVadDetecting(false)
-    setVadProgress(0)
-  }, [audioSourceId, vadDetecting, duration, getBlob, persistSequence, wrapHeavyOp, t])
+    setOp(null)
+  }, [audioSourceId, vadDetecting, duration, getBlob, persistSequence, wrapHeavyOp, beginOp, t])
 
   const handleAutoDetectClick = useCallback(() => {
     // Check the length first, so an over-long file is not preceded by a
@@ -680,6 +691,12 @@ function FragmentEditorPageInner() {
     if (!blob) return
 
     setTrimming(true)
+    // With no fragments to keep, speech has to be found first.
+    const tracker = beginOp(
+      t("editor.op.trim"),
+      fragments.length > 0 ? ["trim", "save"] : ["decode", "vad", "trim", "save"],
+      blob,
+    )
 
     // ОБЁРНУТО в wrapHeavyOp
     const result = await wrapHeavyOp(t("editor.op.trim"), async () => {
@@ -689,33 +706,31 @@ function FragmentEditorPageInner() {
         segments = fragments.map(f => ({ start: f.start, end: f.end }))
       } else {
         setVadDetecting(true)
-        setVadProgress(0)
 
         // Chunked mono decode, same as auto-detect: decoding a multi-hour file
         // whole asks the browser for a several-GB buffer and fails.
-        const { samples, sampleRate } = await decodeMonoPcm(blob, {
-          onProgress: (p) => setVadProgress(p * DECODE_PROGRESS_SHARE),
-        })
+        const { samples, sampleRate } = await decodeMonoPcm(blob, { onProgress: tracker.setProgress })
 
-        segments = await detectSpeechSegments(samples, sampleRate, (p) =>
-          setVadProgress(DECODE_PROGRESS_SHARE + p * (1 - DECODE_PROGRESS_SHARE)),
-        )
+        tracker.startStage("vad")
+        segments = await detectSpeechSegments(samples, sampleRate, tracker.setProgress)
 
         setVadDetecting(false)
-        setVadProgress(0)
 
         if (segments.length === 0) {
           throw new Error(t("editor.noSpeechToTrim"))
         }
       }
 
+      tracker.startStage("trim")
       const {
         blob: trimmedBlob,
         segmentMap,
         newDuration,
         originalDuration,
         waveform: trimmedWaveform,
-      } = await trimSilence(blob, segments)
+      } = await trimSilence(blob, segments, undefined, undefined, { onProgress: tracker.setProgress })
+
+      tracker.startStage("save")
 
       const sourceFile = files.find(f => f.id === audioSourceId)
       const baseName = sourceFile?.name?.replace(/\.[^.]+$/, "") ?? "audio"
@@ -784,6 +799,7 @@ function FragmentEditorPageInner() {
       /* Point the sequence at the trimmed audio, in place. It keeps its id, its
          name and its spot in this file's list — only what it plays changes. */
       const label = await attachProcessedAudio(remappedFragments, newAudioId, newDuration, "trim")
+      tracker.finish()
 
       return { originalDuration, segmentMap, newDuration, trimmedName, remappedFragments, label }
     })
@@ -815,8 +831,8 @@ function FragmentEditorPageInner() {
 
     setTrimming(false)
     setVadDetecting(false)
-    setVadProgress(0)
-  }, [audioId, audioSourceId, trimming, vadDetecting, getBlob, addFile, fragments, files, stop, attachProcessedAudio, wrapHeavyOp, t])
+    setOp(null)
+  }, [audioId, audioSourceId, trimming, vadDetecting, getBlob, addFile, fragments, files, stop, attachProcessedAudio, wrapHeavyOp, beginOp, t])
 
   // --- Normalize / Maximize volume ---
   //
@@ -828,6 +844,12 @@ function FragmentEditorPageInner() {
 
   /** A gain operation is running — both block the same set of actions. */
   const volumeBusy = normalizing || maximizing
+
+  /** Action-bar label of the running operation. */
+  const busyLabel = vadDetecting ? (trimming ? t("editor.detectingSpeech") : t("editor.detecting"))
+    : trimming ? t("editor.trimming")
+    : normalizing ? t("editor.normalizing")
+    : t("editor.maximizing")
 
   /* Steps already applied to the sequence being edited. The button that ran one
      is ticked and disabled, the way Auto-detect speech is once it has run. */
@@ -859,6 +881,7 @@ function FragmentEditorPageInner() {
       if (selectedFragments.length === 0) {
         throw new Error(t("editor.noFragmentsNormalize"))
       }
+      const tracker = beginOp(opLabel, [op, "save"], srcBlob)
 
       let blob: Blob
       let waveform: number[]
@@ -866,17 +889,18 @@ function FragmentEditorPageInner() {
       let cappedCount: number | undefined
 
       if (op === "normalize") {
-        const r = await normalizeFragments(srcBlob, selectedFragments)
+        const r = await normalizeFragments(srcBlob, selectedFragments, { onProgress: tracker.setProgress })
         blob = r.blob
         waveform = r.waveform
       } else {
-        const r = await maximizeFragments(srcBlob, selectedFragments)
+        const r = await maximizeFragments(srcBlob, selectedFragments, { onProgress: tracker.setProgress })
         blob = r.blob
         waveform = r.waveform
         gainsDb = r.fragmentGains.map(g => 20 * Math.log10(g.gainApplied))
         cappedCount = r.cappedCount
       }
 
+      tracker.startStage("save")
       const sourceFile = files.find(f => f.id === audioSourceId)
       const baseName = sourceFile?.name?.replace(/\.[^.]+$/, "") ?? "audio"
       const suffix = op === "normalize" ? "normalized" : "maximized"
@@ -897,6 +921,7 @@ function FragmentEditorPageInner() {
          and so do their subtitle and vocabulary bindings, which still belong to
          the file this sequence lives under. */
       const label = await attachProcessedAudio([...fragments].sort((a, b) => a.start - b.start), newAudioId, duration, op)
+      tracker.finish()
 
       return {
         op,
@@ -918,7 +943,8 @@ function FragmentEditorPageInner() {
     }
 
     setBusy(false)
-  }, [audioId, audioSourceId, normalizing, maximizing, vadDetecting, trimming, getBlob, fragments, volumeExcluded, files, addFile, duration, stop, attachProcessedAudio, wrapHeavyOp, t])
+    setOp(null)
+  }, [audioId, audioSourceId, normalizing, maximizing, vadDetecting, trimming, getBlob, fragments, volumeExcluded, files, addFile, duration, stop, attachProcessedAudio, wrapHeavyOp, beginOp, t])
 
   // --- File playback ---
     // --- File playback ---
@@ -1558,7 +1584,7 @@ function FragmentEditorPageInner() {
     <div className="page">
       <h2>{t("editor.title")}</h2>
       <div className="editor-source">
-        <p>{audioFile?.name ?? t("common.unknownFile")}</p>
+        <p className="selectable-text">{audioFile?.name ?? t("common.unknownFile")}</p>
         {/* Absent until the sequence exists — a brand new one is only written
             once the first fragment is added. */}
         {currentSequence && (
@@ -1566,7 +1592,7 @@ function FragmentEditorPageInner() {
         )}
         {/* Says why the waveform is not the one the file itself would draw. */}
         {currentSequence && isProcessed(currentSequence) && (
-          <p className="editor-source__processed">
+          <p className="editor-source__processed selectable-text">
             {t("editor.playsProcessed", { name: sourceFile?.name ?? "" })}
           </p>
         )}
@@ -1740,16 +1766,14 @@ function FragmentEditorPageInner() {
               disabled={vadDetecting || trimming || volumeBusy || fragments.length === 0}>
               {t("editor.deleteAll")}
             </button>
-            {vadDetecting && (
+            {(vadDetecting || trimming || volumeBusy) && (
               <div className="vad-indicator">
-                <div className={`spinner spinner--vad ${trimming ? "spinner--vad-trim" : "spinner--vad-detect"}`} />
-                <span>{trimming ? t("editor.detectingSpeech") : t("editor.detecting")}</span>
-              </div>
-            )}
-            {volumeBusy && (
-              <div className="vad-indicator">
-                <div className="spinner spinner--vad spinner--vad-trim" />
-                <span>{normalizing ? t("editor.normalizing") : t("editor.maximizing")}</span>
+                <div className={`spinner spinner--vad ${vadDetecting && !trimming ? "spinner--vad-detect" : "spinner--vad-trim"}`} />
+                {/* The tracker starts a moment after the busy flag (the blob is
+                    read first); until then the bare label stands in. */}
+                {op
+                  ? <OperationProgressIndicator key={op.id} op={op} label={busyLabel} />
+                  : <span>{busyLabel}</span>}
               </div>
             )}
           </div>

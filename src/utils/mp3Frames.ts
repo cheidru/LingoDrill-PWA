@@ -21,6 +21,8 @@ export interface Mp3Plan {
   chunks: Mp3Chunk[]
   /** Exact total audio duration in seconds, summed from frame durations. */
   totalDuration: number
+  /** Sample rate of the first frame — the rate the file was encoded at. */
+  sampleRate: number
 }
 
 // Bitrate tables in kbps, indexed by the 4-bit bitrate field (0 = free,
@@ -153,6 +155,7 @@ export function planMp3Chunks(b: Uint8Array, chunkSec = 30): Mp3Plan {
   let chunkStart = pos
   let chunkDur = 0
   let frameCount = 0
+  let sampleRate = 0
 
   while (pos + 4 <= b.length) {
     const fi = parseFrameHeader(b, pos)
@@ -172,6 +175,7 @@ export function planMp3Chunks(b: Uint8Array, chunkSec = 30): Mp3Plan {
     }
     pos += fi.size
     chunkDur += fi.samples / fi.sampleRate
+    if (frameCount === 0) sampleRate = fi.sampleRate
     frameCount++
     if (chunkDur >= chunkSec) {
       const byteEnd = Math.min(pos, b.length)
@@ -189,5 +193,5 @@ export function planMp3Chunks(b: Uint8Array, chunkSec = 30): Mp3Plan {
   if (frameCount === 0 || chunks.length === 0) {
     throw new Error("No MP3 frames parsed")
   }
-  return { chunks, totalDuration }
+  return { chunks, totalDuration, sampleRate }
 }

@@ -7,6 +7,13 @@
   overflow: hidden;
 }
 
+/* The app turns text selection off on <html>; audio file names turn it back
+   on so they can be copied wherever they are shown. */
+.selectable-text {
+  -webkit-user-select: text;
+  user-select: text;
+}
+
 /* === Header === */
 .header {
   display: flex;
@@ -31,6 +38,7 @@
   color: var(--color-primary);
   flex-shrink: 0;
   letter-spacing: -0.02em;
+  text-decoration: none;
 }
 .header__nav-btn {
   padding: 8px 14px;
@@ -342,6 +350,94 @@ html.mobile .header__overlay {
 .action-bar__btn { padding: 10px 22px; }
 .action-bar__btn--danger { color: var(--color-danger); }
 .vad-indicator { display: flex; align-items: center; gap: 8px; font-size: 0.8rem; color: var(--color-text-muted); }
+
+/* === Long-operation progress (OperationProgressIndicator) === */
+/* A native <progress>, so the fill needs no inline style: each engine styles
+   its own parts. Diagonal stripes drift across the fill to show the work is
+   alive through stretches where the percent does not move (VAD in a long
+   silence, the final save). */
+.op-progress-bar {
+  -webkit-appearance: none;
+  appearance: none;
+  display: block;
+  width: 100%;
+  height: 8px;
+  border: none;
+  border-radius: 4px;
+  overflow: hidden;
+  background-color: var(--color-bg-subtle);
+  color: var(--color-primary);
+}
+.op-progress-bar::-webkit-progress-bar { background-color: var(--color-bg-subtle); border-radius: 4px; }
+.op-progress-bar::-webkit-progress-value {
+  background-color: var(--color-primary);
+  background-image: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%,
+    rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%);
+  background-size: 16px 16px;
+  border-radius: 4px;
+  transition: width 0.4s ease;
+  animation: op-progress-stripes 1s linear infinite;
+}
+.op-progress-bar::-moz-progress-bar {
+  background-color: var(--color-primary);
+  background-image: linear-gradient(135deg,
+    rgba(255, 255, 255, 0.25) 25%, transparent 25%, transparent 50%,
+    rgba(255, 255, 255, 0.25) 50%, rgba(255, 255, 255, 0.25) 75%, transparent 75%);
+  background-size: 16px 16px;
+  border-radius: 4px;
+  animation: op-progress-stripes 1s linear infinite;
+}
+@keyframes op-progress-stripes {
+  from { background-position: 0 0; }
+  to { background-position: 16px 0; }
+}
+@media (prefers-reduced-motion: reduce) {
+  .op-progress-bar::-webkit-progress-value { animation: none; }
+  .op-progress-bar::-moz-progress-bar { animation: none; }
+}
+
+/* Compact form in the action bar: label + percent over a thin bar, time left
+   beside it. A button, since tapping it reopens the hidden pop-up. */
+.op-inline {
+  display: grid;
+  grid-template-columns: minmax(120px, 1fr) auto;
+  align-items: center;
+  column-gap: 10px;
+  row-gap: 4px;
+  min-width: 220px;
+  padding: 2px 4px;
+  border: none;
+  background: transparent;
+  color: inherit;
+  font: inherit;
+  text-transform: none;
+  letter-spacing: normal;
+  text-align: left;
+}
+.op-inline:hover { background: transparent; color: var(--color-text); }
+.op-inline__label { grid-column: 1 / -1; }
+.op-inline__bar { height: 6px; }
+.op-inline__left { white-space: nowrap; }
+
+/* The pop-up */
+.op-progress {
+  width: min(420px, 90vw);
+  text-align: left;
+}
+.op-progress__estimate { margin: 0 0 14px; font-size: 0.9rem; color: var(--color-text-secondary); }
+.op-progress__stage { margin: 0 0 8px; font-size: 0.95rem; font-weight: 600; color: var(--color-text); }
+.op-progress__stats {
+  display: flex;
+  justify-content: space-between;
+  gap: 12px;
+  margin-top: 6px;
+  font-size: 0.85rem;
+  color: var(--color-text-secondary);
+}
+.op-progress__pct { font-family: var(--font-mono); font-weight: 700; color: var(--color-text); }
+.op-progress__elapsed { margin: 4px 0 0; font-size: 0.8rem; color: var(--color-text-muted); }
+.op-progress__hint { margin: 14px 0 0; font-size: 0.8rem; line-height: 1.5; color: var(--color-text-muted); }
 
 .subtitle-prompt {
   padding: 12px 16px;
@@ -1657,6 +1753,14 @@ html.mobile .subtitle-prompt {
 }
 html.mobile .vad-indicator {
   font-size: 0.9rem;
+  /* Its own full-width row, so the bar has room — and above the wrapped
+     buttons rather than after them, where it would sit below the fold. */
+  flex-basis: 100%;
+  order: -1;
+}
+html.mobile .op-inline {
+  flex: 1;
+  min-width: 0;
 }
 
 /* ===========================================================

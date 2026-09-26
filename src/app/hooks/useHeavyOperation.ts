@@ -1,6 +1,7 @@
 // app/hooks/useHeavyOperation.ts
 
 import { useState, useCallback } from "react"
+import { holdScreenAwake } from "../../utils/wakeLock"
 
 export interface HeavyOperationError {
   operationName: string
@@ -23,6 +24,8 @@ export function useHeavyOperation() {
 
   const wrapHeavyOp = useCallback(
     async <T>(operationName: string, fn: () => Promise<T>): Promise<T | null> => {
+      // A long run must not be stalled by the phone's screen timeout.
+      const release = await holdScreenAwake()
       try {
         return await fn()
       } catch (err) {
@@ -31,6 +34,8 @@ export function useHeavyOperation() {
         setHeavyError({ operationName, error })
         setShowMobileHelp(true)
         return null
+      } finally {
+        release()
       }
     },
     [],

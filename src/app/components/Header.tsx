@@ -3,7 +3,7 @@
 import { useEffect, useRef, useState } from "react"
 import type { CSSProperties, ReactNode } from "react"
 import { createPortal } from "react-dom"
-import { useNavigate, useLocation } from "react-router-dom"
+import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useSharedAudioEngine } from "../hooks/useSharedAudioEngine"
 import { OnboardingScreen } from "./OnboardingScreen"
 import { HelpScreen } from "./HelpScreen"
@@ -228,7 +228,9 @@ export function Header() {
   return (
     <>
       <header className="header">
-        <span className="header__logo">{t("app.title")}</span>
+        {/* Home: the Audio Library, same as its tab — and, like the tab, it
+            closes the drawer and any submenu on the way. */}
+        <Link to="/" className="header__logo" onClick={closeMenus}>{t("app.title")}</Link>
 
         <button
           className={`header__burger${desktopClose ? " header__burger--close" : ""}`}

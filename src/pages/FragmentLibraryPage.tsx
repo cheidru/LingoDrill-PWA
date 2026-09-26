@@ -195,7 +195,7 @@ function FragmentLibraryPageInner() {
   return (
     <div className="page">
       <h2>{t("fragmentLibrary.title")}</h2>
-      <p className="sp-file-info">
+      <p className="sp-file-info selectable-text">
         {fileName}
       </p>
 

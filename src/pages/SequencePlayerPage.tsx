@@ -1042,7 +1042,7 @@ function SequencePlayerPageInner() {
       <p className="sp-file-info">
         <strong>#{sequence.label}</strong>
         <span className="sp-file-info-separator">·</span>
-        {fileName}
+        <span className="selectable-text">{fileName}</span>
         <span className="sp-file-info-separator">·</span>
         {t.n("player.fragments", sequence.fragments.length)}
       </p>

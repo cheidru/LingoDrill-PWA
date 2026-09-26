@@ -73,7 +73,7 @@ export function FavouritesPage() {
               {t.n("fragmentLibrary.fragments", seq.fragments.length)}
             </span>
 
-            <span style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>
+            <span className="selectable-text" style={{ fontSize: "0.85rem", color: "var(--color-text-secondary)" }}>
               {getAudioName(seq.audioId)}
             </span>
 

@@ -23,7 +23,7 @@ export const AudioLibrary: React.FC<AudioLibraryProps> = ({ files, selectedFile,
           const cls = `audio-list__item${selectedFile?.id === file.id ? " audio-list__item--selected" : ""}`
           return (
             <li key={file.id} className={cls} onClick={() => selectFile(file.id)}>
-              <span>{file.name}</span>
+              <span className="selectable-text">{file.name}</span>
               <button className="btn-delete" onClick={e => { e.stopPropagation(); onDelete(file.id) }}>{t("common.delete")}</button>
             </li>
           )
