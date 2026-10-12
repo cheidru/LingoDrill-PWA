@@ -6,6 +6,7 @@ import { useNavigate } from "react-router-dom"
 import { useT } from "../../utils/i18n"
 import { OnboardingStage } from "./OnboardingStage"
 import { OnboardingDemo, type DemoStage } from "./OnboardingDemo"
+import { LanguageSwitch } from "./LanguageSwitch"
 
 type Props = {
   onClose: () => void
@@ -123,7 +124,10 @@ export function OnboardingScreen({ onClose }: Props) {
                 {t(`onboarding.${screen.key}.eyebrow`)}
               </p>
             ) : (
-              <p className="ob__eyebrow ob__eyebrow--brand">{t("app.title")}</p>
+              <div className="ob__brand-row">
+                <p className="ob__eyebrow ob__eyebrow--brand">{t("app.title")}</p>
+                <LanguageSwitch />
+              </div>
             )}
 
             <h2 className="ob__title" id="ob-title">

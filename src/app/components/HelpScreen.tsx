@@ -13,6 +13,7 @@ import type { CSSProperties, KeyboardEvent } from "react"
 import { useT } from "../../utils/i18n"
 import { APP_VERSION } from "../../utils/version"
 import { HelpMock } from "./HelpMocks"
+import { LanguageSwitch } from "./LanguageSwitch"
 import { HELP_TOPICS, type HelpTopic } from "./helpTopics"
 
 type Props = {
@@ -185,7 +186,10 @@ export function HelpScreen({ onClose }: Props) {
 
         {!current ? (
           <>
-            <p className="ob__eyebrow ob__eyebrow--brand">{t("app.title")}</p>
+            <div className="ob__brand-row">
+              <p className="ob__eyebrow ob__eyebrow--brand">{t("app.title")}</p>
+              <LanguageSwitch />
+            </div>
             <h2 className="ob__title" id="hl-title">{t("help.title")}</h2>
             <p className="ob__body">{t("help.intro")}</p>
 
