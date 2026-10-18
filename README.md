@@ -6,6 +6,8 @@ It is a Progressive Web App (PWA). You can install it on a phone or computer, an
 
 **Open the app:** https://cheidru.github.io/LingoDrill-PWA/
 
+**Install it:** https://cheidru.github.io/LingoDrill-PWA/install/
+
 ## Installing the app
 
 Installation needs the page to be served over HTTPS, which the link above is. Open the app while online at least once. The first visit saves it for offline use.
@@ -81,8 +83,9 @@ npm run dev                   # start the dev server
 npm run build                 # type-check and build for production
 npm run preview               # serve the production build locally
 npm run lint                  # run ESLint
-npm run deploy                # build and publish to GitHub Pages
 npm run generate-pwa-assets   # regenerate install icons from public/favicon.svg
 ```
+
+Every push to `main` is built and published to GitHub Pages by `.github/workflows/pages.yml`. Pushes that only change Markdown files are skipped, and the workflow can also be run by hand from the Actions tab. One-time setup: **Settings → Pages → Build and deployment → Source: GitHub Actions**.
 
 The service worker only runs in the production build. To test installing and offline use locally, run `npm run build` and then `npm run preview`.

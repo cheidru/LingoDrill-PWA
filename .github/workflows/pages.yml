@@ -1,0 +1,42 @@
+# Builds the app and publishes it to https://cheidru.github.io/LingoDrill-PWA/ on every push to main.
+# One-time setup: Settings > Pages > Build and deployment > Source: GitHub Actions
+# (it used to be the gh-pages branch, written by the old `npm run deploy`).
+name: Deploy
+
+on:
+  push:
+    branches: [main]
+    # Docs alone change nothing in the built app.
+    paths-ignore: ['**.md']
+  workflow_dispatch:
+
+permissions:
+  contents: read
+  pages: write
+  id-token: write
+
+# A newer push waits for the deploy in progress rather than cancelling it halfway.
+concurrency:
+  group: pages
+  cancel-in-progress: false
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 24
+          cache: npm
+      - run: npm ci
+      - run: npm run lint
+      - run: npm run build
+      - uses: actions/upload-pages-artifact@v3
+        with:
+          path: dist
+      - id: deployment
+        uses: actions/deploy-pages@v4

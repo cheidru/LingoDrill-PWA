@@ -9,10 +9,12 @@ npm run dev        # start dev server (Vite)
 npm run build      # TypeScript check + Vite production build
 npm run lint       # ESLint
 npm run preview    # preview production build locally
-npm run deploy     # build + publish to GitHub Pages (gh-pages -d dist)
+npm run deploy     # old manual publish to the gh-pages branch (superseded, see below)
 ```
 
 There is no test framework in this project.
+
+Deployment: `.github/workflows/pages.yml` lints, builds and publishes `dist/` to GitHub Pages on every push to `main` (pushes touching only `*.md` are skipped; it can also be started by hand). The Pages source must be set to "GitHub Actions". Version tags (`v0.0.NN`, matching `APP_VERSION` in `src/utils/version.ts`) only mark releases; they deploy nothing.
 
 ## Architecture
 
