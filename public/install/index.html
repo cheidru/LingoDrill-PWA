@@ -1,0 +1,455 @@
+<!doctype html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <meta name="viewport" content="width=device-width, initial-scale=1" />
+    <title>Install LingoDrill</title>
+    <meta name="description" content="Install the LingoDrill language-drilling app on Android, iPhone, iPad or a computer." />
+    <meta name="theme-color" content="#14b8ab" />
+    <!-- Served from public/ as is (Vite does not rewrite it), so every link is relative to /LingoDrill-PWA/install/.
+         The manifest link lets Chrome and Edge offer the Install button on this page too. -->
+    <link rel="manifest" href="../manifest.webmanifest" />
+    <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
+    <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
+    <link rel="preconnect" href="https://fonts.googleapis.com" />
+    <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+    <link href="https://fonts.googleapis.com/css2?family=Hanken+Grotesk:wght@500;700;800&display=swap" rel="stylesheet" />
+    <style>
+      /* Colors of the app's default theme (Studio High-Contrast Light, src/index.css), with its dark variant,
+         and the teal of the app icon for the header. */
+      :root {
+        --header-from: #d9f0ec;
+        --header-to: #faf8ff;
+        --brand: #14b8ab;
+        --bg: #faf8ff;
+        --surface: #ffffff;
+        --text: #131b2e;
+        --text-muted: #5b5e70;
+        --border: #c3c5d9;
+        --accent: #0052ff;
+        --accent-text: #ffffff;
+        --link: #003ec7;
+        --radius: 12px;
+        color-scheme: light;
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+        font-size: 16px;
+        line-height: 1.5;
+      }
+      @media (prefers-color-scheme: dark) {
+        :root {
+          --header-from: #0d3b3a;
+          --header-to: #0f172a;
+          --bg: #0f172a;
+          --surface: #1e293b;
+          --text: #e2e8f0;
+          --text-muted: #94a3b8;
+          --border: #334155;
+          --accent: #3b82f6;
+          --accent-text: #ffffff;
+          --link: #93b4ff;
+          color-scheme: dark;
+        }
+      }
+      * {
+        box-sizing: border-box;
+      }
+      body {
+        margin: 0;
+        background: var(--bg);
+        color: var(--text);
+      }
+      a {
+        color: var(--link);
+      }
+      h1,
+      h2 {
+        font-family: 'Hanken Grotesk', Inter, system-ui, sans-serif;
+      }
+      header {
+        position: relative;
+        background: linear-gradient(180deg, var(--header-from), var(--header-to));
+        border-bottom: 1px solid var(--border);
+        padding: 48px 16px 40px;
+        text-align: center;
+      }
+      header .logo {
+        display: block;
+        margin: 0 auto 12px;
+        filter: drop-shadow(0 6px 16px rgb(20 184 171 / 0.35));
+      }
+      header h1 {
+        margin: 0 0 8px;
+        font-size: 2.25rem;
+        font-weight: 800;
+        letter-spacing: -0.02em;
+      }
+      header p {
+        margin: 0 auto;
+        max-width: 36rem;
+        color: var(--text-muted);
+      }
+      .lang-switch {
+        position: absolute;
+        top: 12px;
+        right: 12px;
+        display: flex;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        overflow: hidden;
+        background: var(--surface);
+      }
+      .lang-switch button {
+        font: inherit;
+        font-size: 0.8125rem;
+        font-weight: 600;
+        text-transform: uppercase;
+        border: none;
+        background: none;
+        color: var(--text-muted);
+        padding: 4px 12px;
+        cursor: pointer;
+      }
+      .lang-switch button[aria-pressed='true'] {
+        background: var(--accent);
+        color: var(--accent-text);
+      }
+      main {
+        max-width: 60rem;
+        margin: 0 auto;
+        padding: 32px 16px 48px;
+      }
+      #status {
+        margin: 0 0 24px;
+        text-align: center;
+        color: var(--text-muted);
+      }
+      #status:empty {
+        display: none;
+      }
+      .cards {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        gap: 16px;
+      }
+      .card {
+        display: flex;
+        flex-direction: column;
+        background: var(--surface);
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+        padding: 20px;
+      }
+      .card.this-device {
+        border-color: var(--brand);
+        box-shadow: 0 0 0 1px var(--brand);
+      }
+      .card h2 {
+        display: flex;
+        align-items: baseline;
+        justify-content: space-between;
+        gap: 8px;
+        margin: 0 0 4px;
+        font-size: 1.25rem;
+      }
+      .badge {
+        display: none;
+        font-family: Inter, system-ui, sans-serif;
+        font-size: 0.75rem;
+        font-weight: 600;
+        color: #04302c;
+        background: var(--brand);
+        border-radius: 999px;
+        padding: 2px 8px;
+        white-space: nowrap;
+      }
+      .this-device .badge {
+        display: inline-block;
+      }
+      .requirements {
+        margin: 0 0 16px;
+        color: var(--text-muted);
+        font-size: 0.875rem;
+      }
+      .button {
+        display: block;
+        width: 100%;
+        font: inherit;
+        text-align: center;
+        font-weight: 600;
+        text-decoration: none;
+        color: var(--accent-text);
+        background: var(--accent);
+        border: none;
+        border-radius: var(--radius);
+        padding: 12px 16px;
+        cursor: pointer;
+      }
+      .button:hover {
+        filter: brightness(1.08);
+      }
+      .button:focus-visible,
+      .lang-switch button:focus-visible {
+        outline: 3px solid var(--brand);
+        outline-offset: 2px;
+      }
+      .card ol {
+        margin: 16px 0 0;
+        padding-left: 1.25rem;
+        font-size: 0.9375rem;
+      }
+      .card li + li {
+        margin-top: 6px;
+      }
+      .card .note {
+        margin: 12px 0 0;
+        font-size: 0.875rem;
+        color: var(--text-muted);
+      }
+      .facts {
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(min(20rem, 100%), 1fr));
+        gap: 8px 24px;
+        margin: 32px 0 0;
+        padding: 0;
+        list-style: none;
+        font-size: 0.9375rem;
+        color: var(--text-muted);
+      }
+      .facts b {
+        color: var(--text);
+      }
+      footer {
+        display: flex;
+        flex-wrap: wrap;
+        justify-content: center;
+        gap: 8px 24px;
+        border-top: 1px solid var(--border);
+        padding: 24px 16px;
+        font-size: 0.875rem;
+      }
+    </style>
+  </head>
+  <body>
+    <header>
+      <div class="lang-switch" role="group" aria-label="Language">
+        <button type="button" lang="en" data-lang="en" title="English" aria-pressed="true">en</button>
+        <button type="button" lang="ru" data-lang="ru" title="Русский" aria-pressed="false">ru</button>
+      </div>
+      <img class="logo" src="../favicon.svg" alt="" width="88" height="88" />
+      <h1>LingoDrill</h1>
+      <p data-i18n="tagline">
+        Learn a language by ear: cut a recording into short fragments and drill each one — on repeat, slowed down, with
+        its subtitles.
+      </p>
+    </header>
+
+    <main>
+      <p id="status" aria-live="polite"></p>
+
+      <div class="cards">
+        <section class="card" data-platform="android">
+          <h2><span data-i18n="android.title">Android</span> <span class="badge" data-i18n="badge">This device</span></h2>
+          <p class="requirements" data-i18n="android.req">Chrome, Edge, Samsung Internet or Firefox</p>
+          <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+          <ol>
+            <li data-i18n="android.1">Open LingoDrill in <b>Chrome</b>.</li>
+            <li data-i18n="android.2">
+              Tap <b>Install</b> when the browser offers it, or open the <b>⋮</b> menu and tap <b>Add to Home screen</b>,
+              then <b>Install</b>.
+            </li>
+            <li data-i18n="android.3">Start LingoDrill from its icon on the home screen or in the app list.</li>
+          </ol>
+          <p class="note" data-i18n="android.note">
+            Samsung Internet: <b>☰</b> menu → <b>Add page to</b> → <b>Home screen</b>. Firefox: <b>⋮</b> menu →
+            <b>Add to Home screen</b>.
+          </p>
+        </section>
+
+        <section class="card" data-platform="ios">
+          <h2><span data-i18n="ios.title">iPhone and iPad</span> <span class="badge" data-i18n="badge">This device</span></h2>
+          <p class="requirements" data-i18n="ios.req">Safari, iOS 16.4 or newer</p>
+          <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+          <ol>
+            <li data-i18n="ios.1">Open LingoDrill in <b>Safari</b>.</li>
+            <li data-i18n="ios.2">Tap the <b>Share</b> button (a square with an arrow pointing up).</li>
+            <li data-i18n="ios.3">Scroll down, tap <b>Add to Home Screen</b>, then <b>Add</b>.</li>
+            <li data-i18n="ios.4">Start LingoDrill from its icon on the home screen.</li>
+          </ol>
+          <p class="note" data-i18n="ios.note">
+            Install first, then add your audio: the installed app does not see files you added in a Safari tab.
+          </p>
+        </section>
+
+        <section class="card" data-platform="desktop">
+          <h2><span data-i18n="desktop.title">Computer</span> <span class="badge" data-i18n="badge">This device</span></h2>
+          <p class="requirements" data-i18n="desktop.req">Windows, macOS, Linux or ChromeOS — Chrome or Edge</p>
+          <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+          <ol>
+            <li data-i18n="desktop.1">Open LingoDrill in <b>Chrome</b> or <b>Edge</b>.</li>
+            <li data-i18n="desktop.2">
+              Click the <b>Install</b> icon at the right end of the address bar (a screen with an arrow), then
+              <b>Install</b>.
+            </li>
+            <li data-i18n="desktop.3">
+              LingoDrill opens in its own window. Start it later from the Start menu, the Dock or the app launcher.
+            </li>
+          </ol>
+          <p class="note" data-i18n="desktop.note">
+            Safari on a Mac: <b>File</b> → <b>Add to Dock</b>. Firefox cannot install web apps — LingoDrill works in
+            an ordinary tab there.
+          </p>
+        </section>
+      </div>
+
+      <ul class="facts">
+        <li data-i18n="fact.free"><b>Free</b>, no account, no app store.</li>
+        <li data-i18n="fact.offline"><b>Works offline</b> once it has been opened.</li>
+        <li data-i18n="fact.private"><b>Your audio stays on your device</b> — nothing is uploaded.</li>
+        <li data-i18n="fact.update"><b>Updates itself:</b> a new version is used the next time you open it.</li>
+      </ul>
+    </main>
+
+    <footer>
+      <a href="../" data-i18n="footer.open">Open LingoDrill</a>
+      <a href="../contacts" data-i18n="footer.contacts">Contacts</a>
+      <a href="https://github.com/cheidru/LingoDrill-PWA" data-i18n="footer.source">Source code</a>
+    </footer>
+
+    <script>
+      // The English text is in the markup; Russian replaces it by data-i18n key. Same localStorage key as the
+      // app (src/utils/settings.ts), so a language picked here is the app's language too, and the other way round.
+      const ru = {
+        tagline:
+          'Учите язык на слух: нарежьте запись на короткие фрагменты и прорабатывайте каждый — с повтором, ' +
+          'в замедлении, с субтитрами.',
+        badge: 'Это устройство',
+        open: 'Открыть LingoDrill',
+        install: 'Установить LingoDrill',
+        'android.title': 'Android',
+        'android.req': 'Chrome, Edge, Samsung Internet или Firefox',
+        'android.1': 'Откройте LingoDrill в <b>Chrome</b>.',
+        'android.2':
+          'Нажмите <b>Установить</b>, когда браузер предложит, или откройте меню <b>⋮</b> и нажмите ' +
+          '<b>Добавить на главный экран</b>, затем <b>Установить</b>.',
+        'android.3': 'Запускайте LingoDrill значком на главном экране или в списке приложений.',
+        'android.note':
+          'Samsung Internet: меню <b>☰</b> → <b>Добавить страницу на</b> → <b>Главный экран</b>. ' +
+          'Firefox: меню <b>⋮</b> → <b>Добавить на главный экран</b>.',
+        'ios.title': 'iPhone и iPad',
+        'ios.req': 'Safari, iOS 16.4 или новее',
+        'ios.1': 'Откройте LingoDrill в <b>Safari</b>.',
+        'ios.2': 'Нажмите кнопку <b>Поделиться</b> (квадрат со стрелкой вверх).',
+        'ios.3': 'Прокрутите вниз, нажмите <b>На экран «Домой»</b>, затем <b>Добавить</b>.',
+        'ios.4': 'Запускайте LingoDrill значком на экране «Домой».',
+        'ios.note':
+          'Сначала установите, потом добавляйте аудио: установленное приложение не видит файлы, ' +
+          'добавленные во вкладке Safari.',
+        'desktop.title': 'Компьютер',
+        'desktop.req': 'Windows, macOS, Linux или ChromeOS — Chrome или Edge',
+        'desktop.1': 'Откройте LingoDrill в <b>Chrome</b> или <b>Edge</b>.',
+        'desktop.2':
+          'Нажмите значок <b>Установить</b> в правом конце адресной строки (экран со стрелкой), затем ' +
+          '<b>Установить</b>.',
+        'desktop.3':
+          'LingoDrill откроется в собственном окне. Потом запускайте его из меню «Пуск», Dock или списка приложений.',
+        'desktop.note':
+          'Safari на Mac: <b>Файл</b> → <b>Добавить в Dock</b>. Firefox не устанавливает веб-приложения — ' +
+          'там LingoDrill работает в обычной вкладке.',
+        'fact.free': '<b>Бесплатно</b>, без регистрации и магазина приложений.',
+        'fact.offline': '<b>Работает без интернета</b> после первого открытия.',
+        'fact.private': '<b>Аудио остаётся на устройстве</b> — ничего никуда не загружается.',
+        'fact.update': '<b>Обновляется само:</b> новая версия включается при следующем запуске.',
+        'footer.open': 'Открыть LingoDrill',
+        'footer.contacts': 'Контакты',
+        'footer.source': 'Исходный код',
+        'status.installed': 'LingoDrill установлен. Запускайте его значком приложения.',
+        'status.standalone': 'Эта страница открыта в установленном LingoDrill.',
+      };
+      const en = {
+        install: 'Install LingoDrill',
+        'status.installed': 'LingoDrill is installed. Start it from its app icon.',
+        'status.standalone': 'This page is open inside the installed LingoDrill.',
+      };
+      for (const el of document.querySelectorAll('[data-i18n]')) en[el.dataset.i18n] = el.innerHTML.trim();
+
+      const LANGUAGE_KEY = 'lingodrill.language';
+      const storage = {
+        get: () => {
+          try {
+            return localStorage.getItem(LANGUAGE_KEY);
+          } catch {
+            return null;
+          }
+        },
+        set: (value) => {
+          try {
+            localStorage.setItem(LANGUAGE_KEY, value);
+          } catch {
+            // Private mode or blocked storage: the switch still works for this visit.
+          }
+        },
+      };
+      // Nothing picked yet: follow the browser, since a newcomer lands here before the app's Settings.
+      let language = storage.get() || (/^ru\b/i.test(navigator.language) ? 'ru' : 'en');
+      if (language !== 'ru') language = 'en';
+      let statusKey = null;
+      const t = (key) => (language === 'ru' ? ru : en)[key];
+
+      const status = document.getElementById('status');
+      const setStatus = (key) => {
+        statusKey = key;
+        status.textContent = key ? t(key) : '';
+      };
+
+      function applyLanguage() {
+        document.documentElement.lang = language;
+        for (const el of document.querySelectorAll('[data-i18n]')) el.innerHTML = t(el.dataset.i18n);
+        for (const button of document.querySelectorAll('.lang-switch button')) {
+          button.setAttribute('aria-pressed', String(button.dataset.lang === language));
+        }
+        setStatus(statusKey);
+      }
+      for (const button of document.querySelectorAll('.lang-switch button')) {
+        button.addEventListener('click', () => {
+          language = button.dataset.lang;
+          storage.set(language);
+          applyLanguage();
+        });
+      }
+      applyLanguage();
+
+      const ua = navigator.userAgent;
+      const isIos = /iPhone|iPad|iPod/.test(ua) || (/Macintosh/.test(ua) && navigator.maxTouchPoints > 1);
+      const device = /Android/.test(ua) ? 'android' : isIos ? 'ios' : 'desktop';
+
+      // The card for this device goes first and is highlighted.
+      const ownCard = document.querySelector(`.card[data-platform="${device}"]`);
+      ownCard.classList.add('this-device');
+      ownCard.parentElement.prepend(ownCard);
+
+      if (matchMedia('(display-mode: standalone)').matches || navigator.standalone) {
+        setStatus('status.standalone');
+      }
+
+      // Chrome and Edge (Android and desktop) hand over their install prompt: the device's button then
+      // installs right here instead of opening the app, where the steps below would be needed.
+      window.addEventListener('beforeinstallprompt', (event) => {
+        event.preventDefault();
+        const button = ownCard.querySelector('.button');
+        const install = document.createElement('button');
+        install.type = 'button';
+        install.className = 'button';
+        install.dataset.i18n = 'install';
+        install.textContent = t('install');
+        install.addEventListener('click', async () => {
+          event.prompt();
+          // A prompt works once; if it was dismissed, the browser fires a new one when it is willing to ask again.
+          await event.userChoice;
+          install.replaceWith(button);
+        });
+        button.replaceWith(install);
+      });
+      window.addEventListener('appinstalled', () => setStatus('status.installed'));
+    </script>
+  </body>
+</html>

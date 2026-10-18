@@ -22,6 +22,8 @@ LingoDrill is a React + Vite + TypeScript installable PWA for language learning 
 
 `vite-plugin-pwa` in `vite.config.ts` generates the manifest and a Workbox service worker that precaches the app shell and serves `index.html` for navigations (deep links work offline). All user data is in IndexedDB, so the whole app works offline. `registerType: 'prompt'` with no prompt UI means a new deploy activates on the next launch, never mid-session. Install icons (`public/pwa-*.png`, `maskable-icon-512x512.png`) are generated from `public/favicon.svg` by `npm run generate-pwa-assets` (config: `pwa-assets.config.ts`).
 
+The install page (`public/install/index.html`, served at `/LingoDrill-PWA/install/`) is a standalone static page, not a React route: Vite copies it untouched, so its links are relative (`../`), and `navigateFallbackDenylist` keeps the service worker from answering it with the app shell. It holds per-platform install steps (Android, iPhone/iPad, computer), puts the visitor's own platform first, turns that card's button into a real Install button when Chrome/Edge fire `beforeinstallprompt` (it links the app's manifest for that), and has its own en/ru switch sharing the app's `lingodrill.language` key.
+
 ### Layers
 
 ```

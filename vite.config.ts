@@ -75,6 +75,8 @@ export default defineConfig({
         globPatterns: ['**/*.{js,css,html,svg,png,ico,woff2}'],
         // Deep links (/file/:id/player/:seqId) are client routes: serve the shell.
         navigateFallback: `${BASE}index.html`,
+        // The install page (public/install/) is its own static page, not a client route.
+        navigateFallbackDenylist: [new RegExp(`^${BASE}install`)],
         maximumFileSizeToCacheInBytes: 5 * 1024 * 1024,
         cleanupOutdatedCaches: true,
       },
