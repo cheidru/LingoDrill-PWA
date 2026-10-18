@@ -1,3 +1,5 @@
+**[Install LingoDrill on your phone or computer →](https://cheidru.github.io/LingoDrill-PWA/install/)**
+
 # LingoDrill-PWA
 
 LingoDrill is a language-learning app for drilling audio fragments. You load an audio file, cut it into fragments, and play them back with repeats, speed changes and subtitles.
@@ -5,8 +7,6 @@ LingoDrill is a language-learning app for drilling audio fragments. You load an 
 It is a Progressive Web App (PWA). You can install it on a phone or computer, and it then runs in its own window and works offline. Audio files, sequences and subtitles are all stored on your device; nothing is uploaded to a server.
 
 **Open the app:** https://cheidru.github.io/LingoDrill-PWA/
-
-**Install it:** https://cheidru.github.io/LingoDrill-PWA/install/
 
 ## Installing the app
 
