@@ -7,8 +7,8 @@
     <meta name="description" content="Install the LingoDrill language-drilling app on Android, iPhone, iPad or a computer." />
     <meta name="theme-color" content="#14b8ab" />
     <!-- Served from public/ as is (Vite does not rewrite it), so every link is relative to /LingoDrill-PWA/install/.
-         The manifest link lets Chrome and Edge offer the Install button on this page too. -->
-    <link rel="manifest" href="../manifest.webmanifest" />
+         No manifest link on purpose: with one, Chrome and Edge offer to install this page itself, not the app.
+         The build fills in the version and release date of the header (vite.config.ts). -->
     <link rel="icon" href="../favicon.svg" type="image/svg+xml" />
     <link rel="apple-touch-icon" href="../apple-touch-icon.png" />
     <link rel="preconnect" href="https://fonts.googleapis.com" />
@@ -102,6 +102,18 @@
         margin: 0 auto;
         max-width: 36rem;
         color: var(--text-muted);
+      }
+      header .version {
+        display: inline-block;
+        margin-top: 16px;
+        padding: 2px 12px;
+        font-size: 0.875rem;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        background: var(--surface);
+      }
+      header .version[hidden] {
+        display: none;
       }
       .lang-switch {
         position: absolute;
@@ -216,9 +228,6 @@
       .copy:focus-visible {
         outline: 3px solid var(--brand);
         outline-offset: 2px;
-      }
-      .card .button {
-        margin: 0 0 12px;
       }
       .shot {
         margin: 0;
@@ -449,6 +458,7 @@
         Learn a language by ear: cut a recording into short fragments and drill each one — on repeat, slowed down, with
         its subtitles.
       </p>
+      <p class="version" id="version" data-version="%APP_VERSION%" data-date="%APP_RELEASE_DATE%" hidden></p>
     </header>
 
     <main>
@@ -667,7 +677,6 @@
           'в замедлении, с субтитрами.',
         badge: 'Это устройство',
         open: 'Открыть LingoDrill',
-        install: 'Установить LingoDrill',
         'android.title': 'Android',
         'android.req': 'Chrome, Edge, Samsung Internet или Firefox',
         'android.shot.newTab': 'Новая вкладка',
@@ -723,13 +732,10 @@
         copied: 'Скопировано',
         'footer.contacts': 'Контакты',
         'footer.source': 'Исходный код',
-        'status.installed': 'LingoDrill установлен. Запускайте его значком приложения.',
         'status.standalone': 'Эта страница открыта в установленном LingoDrill.',
       };
       const en = {
-        install: 'Install LingoDrill',
         copied: 'Copied',
-        'status.installed': 'LingoDrill is installed. Start it from its app icon.',
         'status.standalone': 'This page is open inside the installed LingoDrill.',
       };
       for (const el of document.querySelectorAll('[data-i18n]')) en[el.dataset.i18n] = el.innerHTML.trim();
@@ -763,6 +769,20 @@
         status.textContent = key ? t(key) : '';
       };
 
+      // The build stamps the version and release date; a page served unbuilt (npm run dev) keeps the
+      // placeholders, and then the line stays hidden.
+      const version = document.getElementById('version');
+      function showVersion() {
+        const { version: number, date } = version.dataset;
+        if (number.startsWith('%')) return;
+        const when = new Intl.DateTimeFormat(language === 'ru' ? 'ru' : 'en-GB', {
+          dateStyle: 'long',
+          timeZone: 'UTC',
+        }).format(new Date(date));
+        version.textContent = `${language === 'ru' ? 'Версия' : 'Version'} ${number} · ${when}`;
+        version.hidden = false;
+      }
+
       function applyLanguage() {
         document.documentElement.lang = language;
         for (const el of document.querySelectorAll('[data-i18n]')) el.innerHTML = t(el.dataset.i18n);
@@ -770,6 +790,7 @@
           button.setAttribute('aria-pressed', String(button.dataset.lang === language));
         }
         setStatus(statusKey);
+        showVersion();
       }
       for (const button of document.querySelectorAll('.lang-switch button')) {
         button.addEventListener('click', () => {
@@ -814,26 +835,6 @@
       } else {
         copyButton.hidden = true;
       }
-
-      // Chrome and Edge (Android and desktop) hand over their install prompt: the device's card then gets an
-      // Install button that installs right here, so the steps below it are not needed.
-      window.addEventListener('beforeinstallprompt', (event) => {
-        event.preventDefault();
-        ownCard.querySelector('.card > .button')?.remove();
-        const install = document.createElement('button');
-        install.type = 'button';
-        install.className = 'button';
-        install.dataset.i18n = 'install';
-        install.textContent = t('install');
-        install.addEventListener('click', async () => {
-          event.prompt();
-          // A prompt works once; if it was dismissed, the browser fires a new one when it is willing to ask again.
-          await event.userChoice;
-          install.remove();
-        });
-        ownCard.querySelector('.requirements').after(install);
-      });
-      window.addEventListener('appinstalled', () => setStatus('status.installed'));
     </script>
   </body>
 </html>

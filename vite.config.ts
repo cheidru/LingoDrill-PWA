@@ -3,6 +3,8 @@ import react from '@vitejs/plugin-react'
 import { VitePWA } from 'vite-plugin-pwa'
 import { resolve } from 'path'
 import { writeFileSync, readFileSync } from 'fs'
+import { execSync } from 'child_process'
+import { APP_VERSION } from './src/utils/version'
 
 // Plugin: ensure viewport meta is in built HTML + create 404.html for GH Pages
 function ghPagesSpaPlugin() {
@@ -34,6 +36,29 @@ function ghPagesSpaPlugin() {
   }
 }
 
+// Plugin: stamp the app version and its release date into the install page's header. The page is
+// copied from public/ untouched, so this edits the copy in dist. The date is that of the commit being
+// built, which is the release commit. writeBundle runs before vite-plugin-pwa hashes the page for its
+// precache (closeBundle), so a new version also refreshes the cached page.
+function installPageVersionPlugin() {
+  return {
+    name: 'install-page-version',
+    writeBundle() {
+      const pagePath = resolve(__dirname, 'dist/install/index.html')
+      let releaseDate: string
+      try {
+        releaseDate = execSync('git log -1 --format=%cs', { encoding: 'utf-8' }).trim()
+      } catch {
+        releaseDate = new Date().toISOString().slice(0, 10)
+      }
+      const html = readFileSync(pagePath, 'utf-8')
+        .replaceAll('%APP_VERSION%', APP_VERSION)
+        .replaceAll('%APP_RELEASE_DATE%', releaseDate)
+      writeFileSync(pagePath, html)
+    },
+  }
+}
+
 // GitHub Pages serves the site from /<repo-name>/. The router basename and
 // the PWA scope are both derived from this, so it is the only place to change.
 const BASE = '/LingoDrill-PWA/'
@@ -44,6 +69,7 @@ export default defineConfig({
   plugins: [
     react(),
     ghPagesSpaPlugin(),
+    installPageVersionPlugin(),
     VitePWA({
       // 'prompt' without a prompt UI: a new version installs in the background
       // and takes over the next time the app is opened, instead of reloading
