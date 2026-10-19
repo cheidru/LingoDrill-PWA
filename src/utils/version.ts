@@ -4,4 +4,4 @@
 // from package.json's version, which npm rewrites on publish and which nothing
 // in the built bundle can read without a build-time define.
 
-export const APP_VERSION = "0.0.03"
+export const APP_VERSION = "0.0.04"
