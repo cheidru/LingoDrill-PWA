@@ -21,6 +21,7 @@
         --header-from: #d9f0ec;
         --header-to: #faf8ff;
         --brand: #14b8ab;
+        --brand-soft: rgb(20 184 171 / 0.16);
         --bg: #faf8ff;
         --surface: #ffffff;
         --text: #131b2e;
@@ -29,6 +30,10 @@
         --accent: #0052ff;
         --accent-text: #ffffff;
         --link: #003ec7;
+        /* The browser drawn in the pictures: its page and its bars. */
+        --shot-screen: #ffffff;
+        --shot-bar: #eceef6;
+        --shot-skeleton: #dfe2ee;
         --radius: 12px;
         color-scheme: light;
         font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
@@ -39,6 +44,7 @@
         :root {
           --header-from: #0d3b3a;
           --header-to: #0f172a;
+          --brand-soft: rgb(20 184 171 / 0.22);
           --bg: #0f172a;
           --surface: #1e293b;
           --text: #e2e8f0;
@@ -47,6 +53,9 @@
           --accent: #3b82f6;
           --accent-text: #ffffff;
           --link: #93b4ff;
+          --shot-screen: #0b1222;
+          --shot-bar: #273449;
+          --shot-skeleton: #24324a;
           color-scheme: dark;
         }
       }
@@ -65,6 +74,12 @@
       h2 {
         font-family: 'Hanken Grotesk', Inter, system-ui, sans-serif;
       }
+      .sprite {
+        position: absolute;
+        width: 0;
+        height: 0;
+        overflow: hidden;
+      }
       header {
         position: relative;
         background: linear-gradient(180deg, var(--header-from), var(--header-to));
@@ -72,7 +87,7 @@
         padding: 48px 16px 40px;
         text-align: center;
       }
-      header .logo {
+      .logo {
         display: block;
         margin: 0 auto 12px;
         filter: drop-shadow(0 6px 16px rgb(20 184 171 / 0.35));
@@ -128,7 +143,7 @@
       }
       .cards {
         display: grid;
-        grid-template-columns: repeat(auto-fit, minmax(16rem, 1fr));
+        grid-template-columns: repeat(auto-fit, minmax(min(17rem, 100%), 1fr));
         gap: 16px;
       }
       .card {
@@ -145,14 +160,23 @@
       }
       .card h2 {
         display: flex;
-        align-items: baseline;
-        justify-content: space-between;
-        gap: 8px;
+        align-items: center;
+        gap: 10px;
         margin: 0 0 4px;
         font-size: 1.25rem;
       }
+      .os-icon {
+        flex: none;
+        width: 28px;
+        height: 28px;
+        fill: currentColor;
+      }
+      .os-icon.android {
+        fill: #3ddc84;
+      }
       .badge {
         display: none;
+        margin-left: auto;
         font-family: Inter, system-ui, sans-serif;
         font-size: 0.75rem;
         font-weight: 600;
@@ -166,7 +190,7 @@
         display: inline-block;
       }
       .requirements {
-        margin: 0 0 16px;
+        margin: 0 0 12px;
         color: var(--text-muted);
         font-size: 0.875rem;
       }
@@ -188,9 +212,76 @@
         filter: brightness(1.08);
       }
       .button:focus-visible,
-      .lang-switch button:focus-visible {
+      .lang-switch button:focus-visible,
+      .copy:focus-visible {
         outline: 3px solid var(--brand);
         outline-offset: 2px;
+      }
+      .card .button {
+        margin: 0 0 12px;
+      }
+      .shot {
+        margin: 0;
+        border-radius: 10px;
+        background: linear-gradient(180deg, var(--header-from), var(--surface));
+        border: 1px solid var(--border);
+        overflow: hidden;
+      }
+      .shot svg {
+        display: block;
+        width: 100%;
+        height: auto;
+        font-family: Inter, system-ui, -apple-system, 'Segoe UI', Roboto, sans-serif;
+      }
+      /* The parts of the pictures. */
+      .s-frame {
+        fill: var(--shot-screen);
+        stroke: var(--border);
+        stroke-width: 1.5;
+      }
+      .s-bar {
+        fill: var(--shot-bar);
+      }
+      .s-skeleton {
+        fill: var(--shot-skeleton);
+      }
+      .s-wave {
+        fill: var(--brand);
+        opacity: 0.55;
+      }
+      .s-panel {
+        fill: var(--surface);
+        stroke: var(--border);
+      }
+      .s-line {
+        stroke: var(--border);
+      }
+      .s-hl {
+        fill: var(--brand-soft);
+        stroke: var(--brand);
+        stroke-width: 2;
+      }
+      .s-arrow {
+        fill: none;
+        stroke: var(--brand);
+        stroke-width: 2.5;
+        stroke-linecap: round;
+        stroke-linejoin: round;
+      }
+      .s-text {
+        fill: var(--text);
+      }
+      .s-muted {
+        fill: var(--text-muted);
+      }
+      .s-icon {
+        color: var(--text);
+      }
+      .s-accent {
+        fill: var(--accent);
+      }
+      .s-accent-text {
+        fill: var(--accent-text);
       }
       .card ol {
         margin: 16px 0 0;
@@ -198,12 +289,35 @@
         font-size: 0.9375rem;
       }
       .card li + li {
-        margin-top: 6px;
+        margin-top: 8px;
       }
       .card .note {
         margin: 12px 0 0;
         font-size: 0.875rem;
         color: var(--text-muted);
+      }
+      /* A button of the browser as it looks on screen, next to its name in the steps. */
+      .key {
+        display: inline-flex;
+        align-items: center;
+        justify-content: center;
+        min-width: 1.6em;
+        height: 1.6em;
+        padding: 0 3px;
+        vertical-align: -0.4em;
+        border: 1px solid var(--border);
+        border-radius: 6px;
+        background: var(--bg);
+      }
+      .glyph {
+        width: 1.1em;
+        height: 1.1em;
+      }
+      .app-glyph {
+        width: 1.4em;
+        height: 1.4em;
+        vertical-align: -0.35em;
+        border-radius: 4px;
       }
       .facts {
         display: grid;
@@ -218,6 +332,53 @@
       .facts b {
         color: var(--text);
       }
+      .get-app {
+        margin: 40px 0 0;
+        padding: 32px 16px;
+        text-align: center;
+        background: linear-gradient(180deg, var(--header-from), var(--surface));
+        border: 1px solid var(--border);
+        border-radius: var(--radius);
+      }
+      .get-app h2 {
+        margin: 0 0 4px;
+        font-size: 1.5rem;
+        font-weight: 800;
+      }
+      .get-app p {
+        margin: 0 auto 20px;
+        max-width: 30rem;
+        color: var(--text-muted);
+      }
+      .get-app .button {
+        max-width: 20rem;
+        margin: 0 auto;
+        font-size: 1.0625rem;
+        padding: 14px 16px;
+      }
+      .get-app .address {
+        display: flex;
+        flex-wrap: wrap;
+        align-items: center;
+        justify-content: center;
+        gap: 4px 12px;
+        margin: 16px auto 0;
+        font-size: 0.875rem;
+      }
+      .address code {
+        font-family: ui-monospace, 'Cascadia Mono', Consolas, monospace;
+        overflow-wrap: anywhere;
+      }
+      .copy {
+        font: inherit;
+        font-weight: 600;
+        color: var(--link);
+        background: none;
+        border: 1px solid var(--border);
+        border-radius: 999px;
+        padding: 2px 12px;
+        cursor: pointer;
+      }
       footer {
         display: flex;
         flex-wrap: wrap;
@@ -230,6 +391,53 @@
     </style>
   </head>
   <body>
+    <!-- Browser buttons, drawn like the browsers draw them, for the steps and the pictures. -->
+    <svg class="sprite" aria-hidden="true">
+      <symbol id="i-dots" viewBox="0 0 24 24" fill="currentColor">
+        <circle cx="12" cy="5" r="2.2" />
+        <circle cx="12" cy="12" r="2.2" />
+        <circle cx="12" cy="19" r="2.2" />
+      </symbol>
+      <symbol id="i-more" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.8">
+        <circle cx="12" cy="12" r="10" />
+        <circle cx="7.5" cy="12" r="1.3" fill="currentColor" stroke="none" />
+        <circle cx="12" cy="12" r="1.3" fill="currentColor" stroke="none" />
+        <circle cx="16.5" cy="12" r="1.3" fill="currentColor" stroke="none" />
+      </symbol>
+      <symbol id="i-share" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M12 2.5v12.5M8 6.5l4-4 4 4" />
+        <path d="M8.5 10H6.5a1.5 1.5 0 0 0-1.5 1.5v8A1.5 1.5 0 0 0 6.5 21h11a1.5 1.5 0 0 0 1.5-1.5v-8A1.5 1.5 0 0 0 17.5 10h-2" />
+      </symbol>
+      <symbol id="i-add-home" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <rect x="3" y="3" width="18" height="18" rx="4.5" />
+        <path d="M12 8v8M8 12h8" />
+      </symbol>
+      <symbol id="i-install" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 4H4.5A1.5 1.5 0 0 0 3 5.5v10A1.5 1.5 0 0 0 4.5 17h15a1.5 1.5 0 0 0 1.5-1.5v-10A1.5 1.5 0 0 0 19.5 4H15" />
+        <path d="M8 21h8M12 17v4M12 2.5v9M8.8 8.3 12 11.5l3.2-3.2" />
+      </symbol>
+      <symbol id="i-chevron-left" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M15 4l-8 8 8 8" />
+      </symbol>
+      <symbol id="i-chevron-right" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round">
+        <path d="M9 4l8 8-8 8" />
+      </symbol>
+      <symbol id="i-book" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <path d="M12 6c-2-1.5-5-2-9-1.5v14c4-.5 7 0 9 1.5 2-1.5 5-2 9-1.5v-14c-4-.5-7 0-9 1.5zM12 6v14" />
+      </symbol>
+      <symbol id="i-tabs" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <rect x="3" y="7" width="14" height="14" rx="2.5" />
+        <path d="M7 3h11.5A2.5 2.5 0 0 1 21 5.5V17" />
+      </symbol>
+      <symbol id="i-copy" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <rect x="8" y="8" width="13" height="13" rx="2.5" />
+        <path d="M16 8V5.5A2.5 2.5 0 0 0 13.5 3h-8A2.5 2.5 0 0 0 3 5.5v8A2.5 2.5 0 0 0 5.5 16H8" />
+      </symbol>
+      <symbol id="i-bookmark" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linejoin="round">
+        <path d="M6 3h12v18l-6-5-6 5z" />
+      </symbol>
+    </svg>
+
     <header>
       <div class="lang-switch" role="group" aria-label="Language">
         <button type="button" lang="en" data-lang="en" title="English" aria-pressed="true">en</button>
@@ -248,16 +456,47 @@
 
       <div class="cards">
         <section class="card" data-platform="android">
-          <h2><span data-i18n="android.title">Android</span> <span class="badge" data-i18n="badge">This device</span></h2>
+          <h2>
+            <svg class="os-icon android" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M18.4395 5.5586c-.675 1.1664-1.352 2.3318-2.0274 3.498-.0366-.0155-.0742-.0286-.1113-.043-1.8249-.6957-3.484-.8-4.42-.787-1.8551.0185-3.3544.4643-4.2597.8203-.084-.1494-1.7526-3.021-2.0215-3.4864a1.1451 1.1451 0 0 0-.1406-.1914c-.3312-.364-.9054-.4859-1.379-.203-.475.282-.7136.9361-.3886 1.5019 1.9466 3.3696-.0966-.2158 1.9473 3.3593.0172.031-.4946.2642-1.3926 1.0177C2.8987 12.176.452 14.772 0 18.9902h24c-.119-1.1108-.3686-2.099-.7461-3.0683-.7438-1.9118-1.8435-3.2928-2.7402-4.1836a12.1048 12.1048 0 0 0-2.1309-1.6875c.6594-1.122 1.312-2.2559 1.9649-3.3848.2077-.3615.1886-.7956-.0079-1.1191a1.1001 1.1001 0 0 0-.8515-.5332c-.5225-.0536-.9392.3128-1.0488.5449zm-.0391 8.461c.3944.5926.324 1.3306-.1563 1.6503-.4799.3197-1.188.0985-1.582-.4941-.3944-.5927-.324-1.3307.1563-1.6504.4727-.315 1.1812-.1086 1.582.4941zM7.207 13.5273c.4803.3197.5506 1.0577.1563 1.6504-.394.5926-1.1038.8138-1.584.4941-.48-.3197-.5503-1.0577-.1563-1.6504.4008-.6021 1.1087-.8106 1.584-.4941z" />
+            </svg>
+            <span data-i18n="android.title">Android</span>
+            <span class="badge" data-i18n="badge">This device</span>
+          </h2>
           <p class="requirements" data-i18n="android.req">Chrome, Edge, Samsung Internet or Firefox</p>
-          <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+          <figure class="shot">
+            <svg viewBox="0 0 240 150" aria-hidden="true">
+              <rect class="s-frame" x="38" y="8" width="164" height="160" rx="18" />
+              <rect class="s-bar" x="46" y="20" width="124" height="22" rx="11" />
+              <text class="s-muted" x="56" y="34" font-size="7.5">cheidru.github.io</text>
+              <circle class="s-hl" cx="184" cy="31" r="9" />
+              <use class="s-icon" href="#i-dots" x="178" y="25" width="12" height="12" />
+              <rect class="s-skeleton" x="46" y="52" width="26" height="6" rx="3" />
+              <rect class="s-wave" x="48" y="98" width="6" height="22" rx="3" />
+              <rect class="s-wave" x="58" y="86" width="6" height="34" rx="3" />
+              <rect class="s-wave" x="68" y="104" width="6" height="16" rx="3" />
+              <rect class="s-skeleton" x="46" y="130" width="28" height="5" rx="2.5" />
+              <path class="s-arrow" d="M184 44v6" />
+              <rect class="s-panel" x="80" y="52" width="114" height="90" rx="8" />
+              <text class="s-text" x="90" y="69" font-size="7" data-i18n="android.shot.newTab">New tab</text>
+              <text class="s-text" x="90" y="89" font-size="7" data-i18n="android.shot.bookmarks">Bookmarks</text>
+              <rect class="s-hl" x="84" y="96" width="106" height="20" rx="5" />
+              <use class="s-icon" href="#i-install" x="89" y="100" width="12" height="12" />
+              <text class="s-text" x="105" y="109" font-size="6.6" font-weight="700" data-i18n="android.shot.install">Install app</text>
+              <text class="s-text" x="90" y="133" font-size="7" data-i18n="android.shot.settings">Settings</text>
+            </svg>
+          </figure>
           <ol>
-            <li data-i18n="android.1">Open LingoDrill in <b>Chrome</b>.</li>
+            <li data-i18n="android.1">Open <a href="../">LingoDrill</a> in <b>Chrome</b>.</li>
             <li data-i18n="android.2">
-              Tap <b>Install</b> when the browser offers it, or open the <b>⋮</b> menu and tap <b>Install app</b>
-              (<b>Add to Home screen</b> in older versions), then confirm.
+              Tap <b>Install</b> when the browser offers it, or open the
+              <span class="key"><svg class="glyph" aria-hidden="true"><use href="#i-dots" /></svg></span> menu and tap
+              <b>Install app</b> (<b>Add to Home screen</b> in older versions), then confirm.
             </li>
-            <li data-i18n="android.3">Start LingoDrill from its icon on the home screen or in the app list.</li>
+            <li data-i18n="android.3">
+              Start LingoDrill from its icon <img class="app-glyph" src="../favicon.svg" alt="" /> on the home screen or
+              in the app list.
+            </li>
           </ol>
           <p class="note" data-i18n="android.note">
             Samsung Internet: <b>☰</b> menu → <b>Add page to</b> → <b>Home screen</b>. Edge: menu →
@@ -266,17 +505,67 @@
         </section>
 
         <section class="card" data-platform="ios">
-          <h2><span data-i18n="ios.title">iPhone and iPad</span> <span class="badge" data-i18n="badge">This device</span></h2>
+          <h2>
+            <svg class="os-icon" viewBox="0 0 24 24" aria-hidden="true">
+              <path d="M12.152 6.896c-.948 0-2.415-1.078-3.96-1.04-2.04.027-3.91 1.183-4.961 3.014-2.117 3.675-.546 9.103 1.519 12.09 1.013 1.454 2.208 3.09 3.792 3.039 1.52-.065 2.09-.987 3.935-.987 1.831 0 2.35.987 3.96.948 1.637-.026 2.676-1.48 3.676-2.948 1.156-1.688 1.636-3.325 1.662-3.415-.039-.013-3.182-1.221-3.22-4.857-.026-3.04 2.48-4.494 2.597-4.559-1.429-2.09-3.623-2.324-4.39-2.376-2-.156-3.675 1.09-4.61 1.09zM15.53 3.83c.843-1.012 1.4-2.427 1.245-3.83-1.207.052-2.662.805-3.532 1.818-.78.896-1.454 2.338-1.273 3.714 1.338.104 2.715-.688 3.559-1.701" />
+            </svg>
+            <span data-i18n="ios.title">iPhone and iPad</span>
+            <span class="badge" data-i18n="badge">This device</span>
+          </h2>
           <p class="requirements" data-i18n="ios.req">Safari — or Chrome and Edge on iOS 16.4 and newer</p>
-          <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+          <figure class="shot">
+            <svg viewBox="0 0 240 150" aria-hidden="true">
+              <!-- Safari's toolbar with the Share button… -->
+              <rect class="s-frame" x="10" y="-20" width="100" height="160" rx="16" />
+              <rect class="s-wave" x="22" y="34" width="6" height="22" rx="3" />
+              <rect class="s-wave" x="32" y="22" width="6" height="34" rx="3" />
+              <rect class="s-wave" x="42" y="40" width="6" height="16" rx="3" />
+              <rect class="s-skeleton" x="20" y="66" width="60" height="5" rx="2.5" />
+              <rect class="s-bar" x="10" y="82" width="100" height="58" />
+              <rect class="s-frame" x="18" y="88" width="84" height="16" rx="8" />
+              <text class="s-muted" x="32" y="99" font-size="7">cheidru.github.io</text>
+              <use class="s-icon" href="#i-chevron-left" x="17" y="114" width="10" height="10" />
+              <use class="s-icon" href="#i-chevron-right" x="34" y="114" width="10" height="10" />
+              <circle class="s-hl" cx="60" cy="119" r="9" />
+              <use class="s-icon" href="#i-share" x="54" y="113" width="12" height="12" />
+              <use class="s-icon" href="#i-book" x="76" y="114" width="10" height="10" />
+              <use class="s-icon" href="#i-tabs" x="93" y="114" width="10" height="10" />
+              <path class="s-arrow" d="M114 75h12M121 70l5 5-5 5" />
+              <!-- …opens the share sheet with Add to Home Screen. -->
+              <rect class="s-frame" x="130" y="-20" width="100" height="160" rx="16" />
+              <rect class="s-bar" x="134" y="28" width="92" height="116" rx="12" />
+              <image href="../favicon.svg" x="142" y="36" width="18" height="18" />
+              <text class="s-text" x="165" y="44" font-size="7.5" font-weight="700">LingoDrill</text>
+              <text class="s-muted" x="165" y="52.5" font-size="6">cheidru.github.io</text>
+              <rect class="s-panel" x="138" y="62" width="84" height="66" rx="8" />
+              <text class="s-text" x="142" y="78" font-size="6" data-i18n="ios.shot.copy">Copy</text>
+              <use class="s-icon" href="#i-copy" x="210" y="71" width="9" height="9" />
+              <path class="s-line" d="M138 84h84" />
+              <rect class="s-hl" x="139" y="86" width="82" height="20" rx="5" />
+              <text class="s-text" x="142" y="99" font-size="6" font-weight="700" data-i18n="ios.shot.addHome">Add to Home Screen</text>
+              <use class="s-icon" href="#i-add-home" x="210" y="91" width="9" height="9" />
+              <path class="s-line" d="M138 108h84" />
+              <text class="s-text" x="142" y="121" font-size="6" data-i18n="ios.shot.bookmark">Add Bookmark</text>
+              <use class="s-icon" href="#i-bookmark" x="210" y="114" width="9" height="9" />
+            </svg>
+          </figure>
           <ol>
-            <li data-i18n="ios.1">Open LingoDrill in <b>Safari</b>.</li>
-            <li data-i18n="ios.2">Tap the <b>Share</b> button (a square with an arrow pointing up).</li>
+            <li data-i18n="ios.1">Open <a href="../">LingoDrill</a> in <b>Safari</b>.</li>
+            <li data-i18n="ios.2">
+              Tap <b>Share</b> <span class="key"><svg class="glyph" aria-hidden="true"><use href="#i-share" /></svg></span>
+              in the toolbar. On iOS 26 tap
+              <span class="key"><svg class="glyph" aria-hidden="true"><use href="#i-more" /></svg></span> next to the
+              address first.
+            </li>
             <li data-i18n="ios.3">
-              Scroll down, tap <b>Add to Home Screen</b> (leave <b>Open as Web App</b> on if it is shown), then
+              Tap <b>Add to Home Screen</b>
+              <span class="key"><svg class="glyph" aria-hidden="true"><use href="#i-add-home" /></svg></span> — scroll
+              down or tap <b>More</b> if it is not in the list. Leave <b>Open as Web App</b> on if it is shown, then tap
               <b>Add</b>.
             </li>
-            <li data-i18n="ios.4">Start LingoDrill from its icon on the home screen.</li>
+            <li data-i18n="ios.4">
+              Start LingoDrill from its icon <img class="app-glyph" src="../favicon.svg" alt="" /> on the home screen.
+            </li>
           </ol>
           <p class="note" data-i18n="ios.note">
             Install first, then add your audio: the installed app does not see files you added in a Safari tab.
@@ -284,14 +573,53 @@
         </section>
 
         <section class="card" data-platform="desktop">
-          <h2><span data-i18n="desktop.title">Computer</span> <span class="badge" data-i18n="badge">This device</span></h2>
+          <h2>
+            <svg class="os-icon" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round" aria-hidden="true">
+              <rect x="2.5" y="3.5" width="19" height="13" rx="2" />
+              <path d="M8 21h8M12 16.5V21" />
+            </svg>
+            <span data-i18n="desktop.title">Computer</span>
+            <span class="badge" data-i18n="badge">This device</span>
+          </h2>
           <p class="requirements" data-i18n="desktop.req">Windows, macOS, Linux or ChromeOS — Chrome or Edge</p>
-          <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+          <figure class="shot">
+            <svg viewBox="0 0 240 150" aria-hidden="true">
+              <rect class="s-frame" x="8" y="12" width="224" height="160" rx="10" />
+              <path class="s-bar" d="M9 32V22a9 9 0 0 1 9-9h204a9 9 0 0 1 9 9v10z" />
+              <path class="s-frame" d="M18 32v-9a5 5 0 0 1 5-5h62a5 5 0 0 1 5 5v9" />
+              <image href="../favicon.svg" x="24" y="20" width="9" height="9" />
+              <text class="s-text" x="37" y="27.5" font-size="6.5">LingoDrill</text>
+              <use class="s-icon" href="#i-chevron-left" x="15" y="38" width="9" height="9" />
+              <use class="s-icon" href="#i-chevron-right" x="28" y="38" width="9" height="9" />
+              <rect class="s-bar" x="42" y="35" width="166" height="15" rx="7.5" />
+              <text class="s-muted" x="51" y="45" font-size="6.5">cheidru.github.io/LingoDrill-PWA/</text>
+              <circle class="s-hl" cx="198" cy="42.5" r="8.5" />
+              <use class="s-icon" href="#i-install" x="192.5" y="37" width="11" height="11" />
+              <use class="s-icon" href="#i-dots" x="216" y="38" width="9" height="9" />
+              <path class="s-line" d="M9 55h222" />
+              <rect class="s-wave" x="22" y="90" width="8" height="30" rx="4" />
+              <rect class="s-wave" x="35" y="72" width="8" height="48" rx="4" />
+              <rect class="s-wave" x="48" y="100" width="8" height="20" rx="4" />
+              <rect class="s-wave" x="61" y="82" width="8" height="38" rx="4" />
+              <rect class="s-skeleton" x="20" y="130" width="70" height="6" rx="3" />
+              <rect class="s-panel" x="104" y="58" width="122" height="84" rx="8" />
+              <text class="s-text" x="113" y="74" font-size="8" font-weight="700" data-i18n="desktop.shot.title">Install app?</text>
+              <image href="../favicon.svg" x="113" y="82" width="20" height="20" />
+              <text class="s-text" x="139" y="91" font-size="7.5" font-weight="700">LingoDrill</text>
+              <text class="s-muted" x="139" y="99.5" font-size="6">cheidru.github.io</text>
+              <rect class="s-panel" x="113" y="114" width="48" height="18" rx="9" />
+              <text class="s-text" x="137" y="125.5" font-size="6.6" text-anchor="middle" data-i18n="desktop.shot.cancel">Cancel</text>
+              <rect class="s-hl" x="164" y="111" width="56" height="24" rx="12" />
+              <rect class="s-accent" x="167" y="114" width="50" height="18" rx="9" />
+              <text class="s-accent-text" x="192" y="125.5" font-size="6.6" font-weight="700" text-anchor="middle" data-i18n="desktop.shot.install">Install</text>
+            </svg>
+          </figure>
           <ol>
-            <li data-i18n="desktop.1">Open LingoDrill in <b>Chrome</b> or <b>Edge</b>.</li>
+            <li data-i18n="desktop.1">Open <a href="../">LingoDrill</a> in <b>Chrome</b> or <b>Edge</b>.</li>
             <li data-i18n="desktop.2">
-              Click the <b>Install</b> icon at the right end of the address bar (a screen with an arrow), then
-              <b>Install</b>.
+              Click the <b>Install</b> icon
+              <span class="key"><svg class="glyph" aria-hidden="true"><use href="#i-install" /></svg></span> at the
+              right end of the address bar, then <b>Install</b>.
             </li>
             <li data-i18n="desktop.3">
               LingoDrill opens in its own window. Start it later from the Start menu, the Dock or the app launcher.
@@ -310,10 +638,20 @@
         <li data-i18n="fact.private"><b>Your audio stays on your device</b> — nothing is uploaded.</li>
         <li data-i18n="fact.update"><b>Updates itself:</b> a new version is used the next time you open it.</li>
       </ul>
+
+      <section class="get-app" aria-labelledby="get-app-title">
+        <img class="logo" src="../favicon.svg" alt="" width="64" height="64" />
+        <h2 id="get-app-title" data-i18n="app.title">Open the app</h2>
+        <p data-i18n="app.text">Open LingoDrill in your browser, then install it with the steps for your device.</p>
+        <a class="button" href="../" data-i18n="open">Open LingoDrill</a>
+        <p class="address">
+          <code id="app-address">cheidru.github.io/LingoDrill-PWA/</code>
+          <button type="button" class="copy" id="copy-address" data-i18n="copy">Copy link</button>
+        </p>
+      </section>
     </main>
 
     <footer>
-      <a href="../" data-i18n="footer.open">Open LingoDrill</a>
       <a href="../contacts" data-i18n="footer.contacts">Contacts</a>
       <a href="https://github.com/cheidru/LingoDrill-PWA" data-i18n="footer.source">Source code</a>
     </footer>
@@ -321,6 +659,8 @@
     <script>
       // The English text is in the markup; Russian replaces it by data-i18n key. Same localStorage key as the
       // app (src/utils/settings.ts), so a language picked here is the app's language too, and the other way round.
+      const key = (icon) => `<span class="key"><svg class="glyph" aria-hidden="true"><use href="#i-${icon}" /></svg></span>`;
+      const appIcon = '<img class="app-glyph" src="../favicon.svg" alt="" />';
       const ru = {
         tagline:
           'Учите язык на слух: нарежьте запись на короткие фрагменты и прорабатывайте каждый — с повтором, ' +
@@ -330,30 +670,43 @@
         install: 'Установить LingoDrill',
         'android.title': 'Android',
         'android.req': 'Chrome, Edge, Samsung Internet или Firefox',
-        'android.1': 'Откройте LingoDrill в <b>Chrome</b>.',
+        'android.shot.newTab': 'Новая вкладка',
+        'android.shot.bookmarks': 'Закладки',
+        'android.shot.install': 'Установить приложение',
+        'android.shot.settings': 'Настройки',
+        'android.1': 'Откройте <a href="../">LingoDrill</a> в <b>Chrome</b>.',
         'android.2':
-          'Нажмите <b>Установить</b>, когда браузер предложит, или откройте меню <b>⋮</b> и нажмите ' +
+          `Нажмите <b>Установить</b>, когда браузер предложит, или откройте меню ${key('dots')} и нажмите ` +
           '<b>Установить приложение</b> (в старых версиях — <b>Добавить на главный экран</b>), затем подтвердите.',
-        'android.3': 'Запускайте LingoDrill значком на главном экране или в списке приложений.',
+        'android.3': `Запускайте LingoDrill значком ${appIcon} на главном экране или в списке приложений.`,
         'android.note':
           'Samsung Internet: меню <b>☰</b> → <b>Добавить страницу на</b> → <b>Главный экран</b>. ' +
           'Edge: меню → <b>Добавить на телефон</b>. Firefox: меню <b>⋮</b> → <b>Добавить на главный экран</b>.',
         'ios.title': 'iPhone и iPad',
         'ios.req': 'Safari — или Chrome и Edge на iOS 16.4 и новее',
-        'ios.1': 'Откройте LingoDrill в <b>Safari</b>.',
-        'ios.2': 'Нажмите кнопку <b>Поделиться</b> (квадрат со стрелкой вверх).',
+        'ios.shot.copy': 'Скопировать',
+        'ios.shot.addHome': 'На экран «Домой»',
+        'ios.shot.bookmark': 'Добавить закладку',
+        'ios.1': 'Откройте <a href="../">LingoDrill</a> в <b>Safari</b>.',
+        'ios.2':
+          `Нажмите <b>Поделиться</b> ${key('share')} на панели инструментов. В iOS 26 сначала нажмите ` +
+          `${key('more')} рядом с адресом.`,
         'ios.3':
-          'Прокрутите вниз, нажмите <b>На экран «Домой»</b> (если есть переключатель <b>Открыть как веб-приложение</b>, ' +
-          'оставьте его включённым), затем <b>Добавить</b>.',
-        'ios.4': 'Запускайте LingoDrill значком на экране «Домой».',
+          `Нажмите <b>На экран «Домой»</b> ${key('add-home')} — если этого пункта нет в списке, прокрутите вниз ` +
+          'или нажмите <b>Ещё</b>. Если есть переключатель <b>Открыть как веб-приложение</b>, оставьте его ' +
+          'включённым, затем нажмите <b>Добавить</b>.',
+        'ios.4': `Запускайте LingoDrill значком ${appIcon} на экране «Домой».`,
         'ios.note':
           'Сначала установите, потом добавляйте аудио: установленное приложение не видит файлы, ' +
           'добавленные во вкладке Safari.',
         'desktop.title': 'Компьютер',
         'desktop.req': 'Windows, macOS, Linux или ChromeOS — Chrome или Edge',
-        'desktop.1': 'Откройте LingoDrill в <b>Chrome</b> или <b>Edge</b>.',
+        'desktop.shot.title': 'Установить приложение?',
+        'desktop.shot.cancel': 'Отмена',
+        'desktop.shot.install': 'Установить',
+        'desktop.1': 'Откройте <a href="../">LingoDrill</a> в <b>Chrome</b> или <b>Edge</b>.',
         'desktop.2':
-          'Нажмите значок <b>Установить</b> в правом конце адресной строки (экран со стрелкой), затем ' +
+          `Нажмите значок <b>Установить</b> ${key('install')} в правом конце адресной строки, затем ` +
           '<b>Установить</b>.',
         'desktop.3':
           'LingoDrill откроется в собственном окне. Потом запускайте его из меню «Пуск», Dock или списка приложений.',
@@ -364,7 +717,10 @@
         'fact.offline': '<b>Работает без интернета</b> после первого открытия.',
         'fact.private': '<b>Аудио остаётся на устройстве</b> — ничего никуда не загружается.',
         'fact.update': '<b>Обновляется само:</b> новая версия включается при следующем запуске.',
-        'footer.open': 'Открыть LingoDrill',
+        'app.title': 'Откройте приложение',
+        'app.text': 'Откройте LingoDrill в браузере и установите его по шагам для вашего устройства.',
+        copy: 'Скопировать ссылку',
+        copied: 'Скопировано',
         'footer.contacts': 'Контакты',
         'footer.source': 'Исходный код',
         'status.installed': 'LingoDrill установлен. Запускайте его значком приложения.',
@@ -372,6 +728,7 @@
       };
       const en = {
         install: 'Install LingoDrill',
+        copied: 'Copied',
         'status.installed': 'LingoDrill is installed. Start it from its app icon.',
         'status.standalone': 'This page is open inside the installed LingoDrill.',
       };
@@ -436,11 +793,33 @@
         setStatus('status.standalone');
       }
 
-      // Chrome and Edge (Android and desktop) hand over their install prompt: the device's button then
-      // installs right here instead of opening the app, where the steps below would be needed.
+      // The app's real address, wherever this page is served from, to read out or copy to another device.
+      const appUrl = new URL('../', location.href).href;
+      document.getElementById('app-address').textContent = appUrl.replace(/^https?:\/\//, '');
+      const copyButton = document.getElementById('copy-address');
+      if (navigator.clipboard) {
+        copyButton.addEventListener('click', async () => {
+          try {
+            await navigator.clipboard.writeText(appUrl);
+          } catch {
+            return;
+          }
+          copyButton.dataset.i18n = 'copied';
+          copyButton.textContent = t('copied');
+          setTimeout(() => {
+            copyButton.dataset.i18n = 'copy';
+            copyButton.textContent = t('copy');
+          }, 2000);
+        });
+      } else {
+        copyButton.hidden = true;
+      }
+
+      // Chrome and Edge (Android and desktop) hand over their install prompt: the device's card then gets an
+      // Install button that installs right here, so the steps below it are not needed.
       window.addEventListener('beforeinstallprompt', (event) => {
         event.preventDefault();
-        const button = ownCard.querySelector('.button');
+        ownCard.querySelector('.card > .button')?.remove();
         const install = document.createElement('button');
         install.type = 'button';
         install.className = 'button';
@@ -450,9 +829,9 @@
           event.prompt();
           // A prompt works once; if it was dismissed, the browser fires a new one when it is willing to ask again.
           await event.userChoice;
-          install.replaceWith(button);
+          install.remove();
         });
-        button.replaceWith(install);
+        ownCard.querySelector('.requirements').after(install);
       });
       window.addEventListener('appinstalled', () => setStatus('status.installed'));
     </script>
