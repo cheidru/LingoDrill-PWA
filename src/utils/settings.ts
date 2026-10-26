@@ -51,6 +51,12 @@ export const DEFAULT_LANGUAGE: Language = "en"
    utils/i18n.ts; a stored language that is not on this list falls back to the
    default rather than stranding the user in a half-translated interface. */
 export const AVAILABLE_LANGUAGES: Language[] = ["en", "ru"]
+/* Each language is named in itself, not in the current interface language —
+   someone looking for Russian must recognise "Русский", not "Russian". */
+export const LANGUAGE_NATIVE_NAMES: Record<Language, string> = {
+  en: "English",
+  ru: "Русский",
+}
 export const DEFAULT_THEME: Theme = "light"
 export const DEFAULT_COLOR_THEME: ColorTheme = "normal"
 export const DEFAULT_BG_COLOR: BgColor = "default"

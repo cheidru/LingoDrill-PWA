@@ -1,12 +1,13 @@
 // app/components/Header.tsx
 
-import { useEffect, useRef, useState } from "react"
+import { useCallback, useEffect, useRef, useState } from "react"
 import type { CSSProperties, ReactNode } from "react"
 import { createPortal } from "react-dom"
 import { Link, useNavigate, useLocation } from "react-router-dom"
 import { useSharedAudioEngine } from "../hooks/useSharedAudioEngine"
 import { OnboardingScreen } from "./OnboardingScreen"
 import { HelpScreen } from "./HelpScreen"
+import { HeaderLanguageMenu } from "./HeaderLanguageMenu"
 import { hasSeenOnboarding, setOnboardingSeen, SETTINGS_SECTIONS } from "../../utils/settings"
 import { useT } from "../../utils/i18n"
 import { APP_VERSION } from "../../utils/version"
@@ -39,6 +40,8 @@ export function Header() {
   const [submenu, setSubmenu] = useState<SubmenuKey | null>(null)
   const [onboardingOpen, setOnboardingOpen] = useState(() => !hasSeenOnboarding())
   const [helpOpen, setHelpOpen] = useState(false)
+  const [langOpen, setLangOpen] = useState(false)
+  const closeLang = useCallback(() => setLangOpen(false), [])
 
   const audioIdMatch = location.pathname.match(/\/file\/([^/]+)/)
   const audioId = audioIdMatch ? audioIdMatch[1] : selectedFile?.id ?? null
@@ -74,6 +77,7 @@ export function Header() {
   const openSubmenu = !mobile || menuOpen ? submenu : null
 
   const toggleSubmenu = (key: SubmenuKey) => {
+    setLangOpen(false)
     if (openSubmenu === key) {
       setSubmenu(null)
       return
@@ -96,13 +100,23 @@ export function Header() {
     }
   }, [submenu, mobile])
 
-  /* Collapses the drawer and its submenu, and nothing else. Navigation is
-     deliberately not part of this: items that navigate have already done so by
-     the time it runs, and the drawer's backdrop must only take the drawer away
-     — never move the user off the page they can see behind it. */
+  /* Collapses the drawer, its submenu and the language list, and nothing
+     else. Navigation is deliberately not part of this: items that navigate
+     have already done so by the time it runs, and the drawer's backdrop must
+     only take the drawer away — never move the user off the page they can see
+     behind it. */
   const closeMenus = () => {
     setSubmenu(null)
     setMenuOpen(false)
+    setLangOpen(false)
+  }
+
+  // The flag shares the bar with the burger, so it takes the drawer down with
+  // it rather than opening its list on top of an open drawer.
+  const toggleLang = () => {
+    const opening = !langOpen
+    closeMenus()
+    setLangOpen(opening)
   }
 
   const openDemo = () => {
@@ -232,9 +246,20 @@ export function Header() {
             closes the drawer and any submenu on the way. */}
         <Link to="/" className="header__logo" onClick={closeMenus}>{t("app.title")}</Link>
 
+        {/* Before the burger in the DOM so that on mobile it sits just left of
+            it; on desktop CSS orders it after the tabs instead. */}
+        <HeaderLanguageMenu open={langOpen} onToggle={toggleLang} onClose={closeLang} />
+
         <button
           className={`header__burger${desktopClose ? " header__burger--close" : ""}`}
-          onClick={() => (anyMenuOpen ? dismissMenu() : setMenuOpen(true))}
+          onClick={() => {
+            if (anyMenuOpen) {
+              dismissMenu()
+            } else {
+              setLangOpen(false)
+              setMenuOpen(true)
+            }
+          }}
           aria-label={anyMenuOpen ? t("menu.close") : t("menu.open")}
           aria-expanded={anyMenuOpen}
         >

@@ -5,14 +5,7 @@
 // without first finding Settings.
 
 import { useT } from "../../utils/i18n"
-import { AVAILABLE_LANGUAGES, getLanguage, setLanguage, type Language } from "../../utils/settings"
-
-/* Each language is named in itself, not in the current interface language —
-   someone looking for Russian must recognise "Русский", not "Russian". */
-const NATIVE_NAMES: Record<Language, string> = {
-  en: "English",
-  ru: "Русский",
-}
+import { AVAILABLE_LANGUAGES, getLanguage, LANGUAGE_NATIVE_NAMES as NATIVE_NAMES, setLanguage } from "../../utils/settings"
 
 export function LanguageSwitch() {
   // useT re-renders this on lingodrill:languagechange, so getLanguage() below
